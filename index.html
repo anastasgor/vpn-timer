@@ -26,17 +26,14 @@
         }
         h1 { font-size: 24px; margin-bottom: 20px; }
         .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .status-active { color: #dc2626; }
+        .status-inactive { color: #10b981; }
         
-        /* Стили статусов */
-        .status-active { color: #dc2626; } /* Красный при обратном отсчете */
-        .status-inactive { color: #10b981; } /* Зеленый, когда отключен */
-
-        /* Панель администратора */
         .admin-panel {
             margin-top: 30px;
             padding-top: 20px;
             border-top: 2px dashed #e5e7eb;
-            display: none; /* Скрыта по умолчанию */
+            display: none;
         }
         .admin-panel input {
             padding: 8px;
@@ -58,95 +55,92 @@
         .btn-start:hover { background-color: #1d4ed8; }
         .btn-stop { background-color: #4b5563; color: white; }
         .btn-stop:hover { background-color: #374151; }
+        .error-msg { color: #b91c1c; font-size: 12px; margin-top: 10px; }
     </style>
-
-    <!-- Подключаем Firebase SDK -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
 <div class="container">
     <h1 id="status-title">Загрузка...</h1>
     <div id="countdown" class="timer">--:--:--</div>
+    <div id="error-log" class="error-msg"></div>
 
-    <!-- АДМИН-ПАНЕЛЬ (видима только по секретной ссылке) -->
+    <!-- АДМИН-ПАНЕЛЬ -->
     <div id="admin-block" class="admin-panel">
         <h3>Панель администратора</h3>
         <label>До какого времени считать:<br>
             <input type="datetime-local" id="target-time">
         </label><br>
-        <button class="btn btn-start" onclick="startTimer()">Запустить отсчет</button>
-        <button class="btn btn-stop" onclick="stopTimer()">Сбросить / Отключить</button>
+        <button class="btn btn-start" id="btn-start">Запустить отсчет</button>
+        <button class="btn btn-stop" id="btn-stop">Сбросить / Отключить</button>
     </div>
 </div>
 
-<script>
-    // 1. НАСТРОЙКА FIREBASE (Вставьте сюда свои данные из консоли Firebase)
-   const firebaseConfig = {
-  apiKey: "AIzaSyBmkogbCgQdE2vPyE3YYW-lfKgpr0gBRB4",
-  authDomain: "vpn1-26e6a.firebaseapp.com",
-  databaseURL: "https://vpn1-26e6a-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "vpn1-26e6a",
-  storageBucket: "vpn1-26e6a.firebasestorage.app",
-  messagingSenderId: "1018718639011",
-  appId: "1:1018718639011:web:d2e36fae23fdcc88110016"
-};
+<!-- Подключаем современный Firebase модульно -->
+<script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getDatabase, ref, set, onValue } from "https://gstatic.com";
 
-    // Инициализация
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    // 1. НАСТРОЙКА FIREBASE ( databaseURL больше не нужен! )
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmkogbCgQdE2vPyE3YYW-lfKgpr0gBRB4",
+        projectId: "vpn1-26e6a"
+    };
 
-    // Переменные для хранения состояния из БД
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+    } catch (e) {
+        document.getElementById('status-title').innerText = "Ошибка запуска";
+        document.getElementById('error-log').innerText = "Не удалось инициализировать Firebase: " + e.message;
+    }
+
     let timerState = { active: false, targetDate: "" };
     let intervalId = null;
 
     // 2. ПРОВЕРКА НА АДМИНА
-    // Если в адресе страницы есть ?admin=true, показываем панель управления
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('admin') === 'true') {
         document.getElementById('admin-block').style.display = 'block';
     }
 
-    // 3. СИНХРОНИЗАЦИЯ С БАЗОЙ ДАННЫХ (Запускается у всех пользователей автоматически)
-    db.ref('vpn_timer').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            timerState = data;
+    // 3. СИНХРОНИЗАЦИЯ С БАЗОЙ ДАННЫХ
+    if (db) {
+        onValue(ref(db, 'vpn_timer'), (snapshot) => {
+            const data = snapshot.val();
+            timerState = data ? data : { active: false, targetDate: "" };
             renderUI();
-        } else {
-            // Если в базе еще нет данных
-            timerState = { active: false, targetDate: "" };
-            renderUI();
-        }
-    });
+        }, (error) => {
+            document.getElementById('status-title').innerText = "Ошибка БД";
+            document.getElementById('error-log').innerText = "Firebase заблокировал чтение: " + error.message + ". Проверьте вкладку Rules в Firebase!";
+        });
+    }
 
-    // 4. ФУНКЦИИ АДМИНИСТРАТОРА (Запись в БД)
-    function startTimer() {
+    // 4. ФУНКЦИИ АДМИНИСТРАТОРА
+    document.getElementById('btn-start').addEventListener('click', () => {
         const inputTime = document.getElementById('target-time').value;
         if (!inputTime) {
             alert("Пожалуйста, выберите дату и время окончания!");
             return;
         }
-        
-        // Сохраняем состояние "Активен" и ISO-строку времени в Firebase
-        db.ref('vpn_timer').set({
+        set(ref(db, 'vpn_timer'), {
             active: true,
             targetDate: new Date(inputTime).toISOString()
+        }).catch(err => {
+            alert("Ошибка записи! Проверьте правила (Rules) в Firebase. Текст: " + err.message);
         });
-    }
+    });
 
-    function stopTimer() {
-        // Сбрасываем триггер активности в Firebase
-        db.ref('vpn_timer').set({
+    document.getElementById('btn-stop').addEventListener('click', () => {
+        set(ref(db, 'vpn_timer'), {
             active: false,
             targetDate: ""
         });
-    }
+    });
 
     // 5. ОТОБРАЖЕНИЕ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ
     function renderUI() {
-        // Очищаем предыдущий работающий интервал пересчета секунд
         if (intervalId) clearInterval(intervalId);
 
         const titleEl = document.getElementById('status-title');
@@ -157,7 +151,6 @@
             titleEl.className = "status-active";
             timerEl.className = "timer status-active";
 
-            // Функция обновления каждую секунду
             function updateSeconds() {
                 const now = new Date();
                 const target = new Date(timerState.targetDate);
@@ -172,12 +165,10 @@
                     return;
                 }
 
-                // Расчет времени
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-                // Добавление нулей для красоты (01:05:09)
                 const pad = (num) => String(num).padStart(2, '0');
                 timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
             }
@@ -186,7 +177,6 @@
             intervalId = setInterval(updateSeconds, 1000);
 
         } else {
-            // Если кнопка не нажата админом
             titleEl.innerText = "VPN отключен";
             titleEl.className = "status-inactive";
             timerEl.innerText = "00:00:00";
