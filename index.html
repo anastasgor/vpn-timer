@@ -17,7 +17,7 @@
             position: relative;
         }
 
-        /* 8-битная текстура травы на фоне */
+        /* 8-битная текстура травы */
         body::before {
             content: "";
             position: absolute;
@@ -30,18 +30,18 @@
             z-index: 1;
         }
 
-        /* Ретро-карточка таймера в пиксельном стиле */
+        /* Ретро-карточка таймера */
         .container {
             text-align: center;
             background: white;
             padding: 40px;
-            border-radius: 4px; /* Меньше скруглений для 8-бит стиля */
+            border-radius: 4px;
             box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 420px;
             position: relative;
             z-index: 10;
-            border: 6px solid #1f2937; /* Жирная пиксельная рамка */
+            border: 6px solid #1f2937;
         }
 
         h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; color: #1f2937; }
@@ -78,7 +78,7 @@
         .share-box { margin-top: 15px; display: none; }
         .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
 
-        /* Препятствия: Олдскульные серые булыжники */
+        /* Олдскульные серые камни */
         .rock {
             position: absolute;
             width: 48px;
@@ -89,31 +89,28 @@
             z-index: 2;
         }
 
-        /* 👾 СЛОЖНЫЙ CSS-КОТ (Базовый холст) */
+        /* ИНТЕРАКТИВНЫЕ КОТЫ */
         .pixel-cat {
             position: absolute;
-            width: 32px;
-            height: 32px;
+            width: 48px;
+            height: 36px;
             z-index: 5;
             will-change: left, top;
+            image-rendering: pixelated; /* Сохраняет четкость пикселей */
         }
-
-        /* Каждый пиксель кота прорисован через тени box-shadow холста */
-        .cat-mesh {
-            width: 2px;
-            height: 2px;
-            background: transparent;
-            position: absolute;
+        .pixel-cat svg {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
-<!-- Препятствия на лужайке -->
-<div class="rock" style="top: 10%; left: 15%;"></div>
-<div class="rock" style="top: 25%; right: 10%;"></div>
-<div class="rock" style="bottom: 15%; left: 12%;"></div>
-<div class="rock" style="bottom: 20%; right: 18%;"></div>
+<!-- Камни-препятствия -->
+<div class="rock" style="top: 12%; left: 15%;"></div>
+<div class="rock" style="top: 25%; right: 12%;"></div>
+<div class="rock" style="bottom: 15%; left: 10%;"></div>
+<div class="rock" style="bottom: 22%; right: 20%;"></div>
 
 <div class="container" id="main-card">
     <h1 id="status-title">СТАТУС VPN</h1>
@@ -135,7 +132,7 @@
 </div>
 
 <script>
-    // 1. ЛОГИКА ССЫЛОК И ОБРАТНОГО ОТСЧЕТА
+    // 1. ЛОГИКА ТАЙМЕРА
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
@@ -188,78 +185,69 @@
         timerEl.innerText = "00:00:00";
     }
 
-    // 2. ПОПИКСЕЛЬНАЯ МАТРИЦА СТАИ ДЕТАЛЬНЫХ КОТОВ
+    // 2. ДВИЖОК ДЛЯ СТАИ ДЕТАЛЬНЫХ SVG-КОТОВ
     const mainCard = document.getElementById('main-card');
     const rocks = document.querySelectorAll('.rock');
     const cats = [];
     const numCats = 4;
 
-    // Палитры окрасов (C — основной, S — тень, E — глаза)
-    const skins = [
-        { c: '#2d3748', s: '#1a202c', e: '#f6e05e' }, // Черный кот, желтые глаза
-        { c: '#ed8936', s: '#dd6b20', e: '#ffffff' }, // Рыжий кот, белые глаза
-        { c: '#a0aec0', s: '#718096', e: '#fc8181' }, // Серый кот, розовые глаза
-        { c: '#f7fafc', s: '#e2e8f0', e: '#63b3ed' }  // Белый кот, голубые глаза
+    // Цвета для разных пород котов (тело, глаза)
+    const catBreeds = [
+        { body: '#1f2937', eye: '#f6e05e' }, // Черный с желтыми глазами
+        { body: '#ed8936', eye: '#ffffff' }, // Рыжий с белыми глазами
+        { body: '#718096', eye: '#fc8181' }, // Серый с розовыми глазами
+        { body: '#f7fafc', eye: '#63b3ed' }  // Белый с голубыми глазами
     ];
 
-    // Генерация детальной карты теней кота (сетка 16x16 пикселей, шаг 2px)
-    function buildCatShadows(color, shadow, eye, legPhase) {
-        const C = color, S = shadow, E = eye, X = 'transparent';
-        
-        // Матрица кота построчно
-        const matrix = [
-            [X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X],
-            [X,X,X,X,X,X,X,X,X,X,C,X,X,C,X,X], // Уши
-            [X,X,X,X,X,X,X,X,X,C,C,C,C,C,C,X], // Голова
-            [X,X,X,X,X,X,X,X,X,C,S,C,C,S,C,X], 
-            [X,X,X,X,X,X,X,X,X,C,E,C,C,E,C,X], // Глаза (со зрачками)
-            [X,X,X,X,X,X,C,X,X,C,C,C,C,C,C,X], // Шея + начало хвоста
-            [X,X,X,X,X,C,C,X,C,C,C,C,C,C,C,C], // Спина
-            [X,X,X,X,C,C,X,X,C,C,C,C,C,C,C,C], // Тело
-            [X,X,X,C,C,X,X,X,C,C,C,C,C,C,C,C], 
-            [X,X,C,C,X,X,X,X,C,C,C,C,C,C,C,C], 
-            [X,C,C,X,X,X,X,X,C,S,S,S,S,S,C,C], // Брюшко
-            [C,C,X,X,X,X,X,X,S,S,S,S,S,S,S,X]
-        ];
+    // Шаблон создания пиксельного кота через векторный код (SVG)
+    function createCatSVG(bodyColor, eyeColor, legPhase) {
+        // Меняем положение лапок в зависимости от фазы анимации
+        const legY1 = legPhase === 0 ? 28 : 30;
+        const legY2 = legPhase === 0 ? 30 : 28;
 
-        // Динамическая анимация лап в зависимости от текущего кадра (legPhase)
-        if (legPhase === 0) {
-            matrix.push([X,X,X,X,X,X,X,X,C,X,X,C,X,C,X,X]); // Лапы фаза 1
-            matrix.push([X,X,X,X,X,X,X,X,C,C,X,C,X,C,C,X]);
-        } else {
-            matrix.push([X,X,X,X,X,X,X,X,X,C,X,C,X,X,C,X]); // Лапы фаза 2
-            matrix.push([X,X,X,X,X,X,X,X,X,C,C,X,C,X,C,C]);
-        }
-
-        // Собираем матрицу в строку CSS box-shadow
-        let shadows = [];
-        for (let row = 0; row < matrix.length; row++) {
-            for (let col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] !== X) {
-                    shadows.push(`${col * 2}px ${row * 2}px 0 ${matrix[row][col]}`);
-                }
-            }
-        }
-        return shadows.join(', ');
+        return `
+        <svg viewBox="0 0 48 36" xmlns="http://w3.org">
+            <!-- Хвост -->
+            <rect x="2" y="12" width="6" height="12" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="8" y="16" width="6" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Туловище -->
+            <rect x="12" y="16" width="22" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Голова -->
+            <rect x="30" y="6" width="14" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Ушки -->
+            <polygon points="32,6 36,0 36,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <polygon points="40,6 44,0 44,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Глаза -->
+            <rect x="38" y="10" width="4" height="4" fill="${eyeColor}"/>
+            <rect x="40" y="10" width="2" height="4" fill="#000"/> <!-- Зрачок -->
+            <!-- Мордочка/Носик -->
+            <rect x="44" y="14" width="2" height="2" fill="#fc8181"/>
+            <!-- Усы -->
+            <line x1="44" y1="16" x2="48" y2="15" stroke="#1f2937" stroke-width="1.5"/>
+            <line x1="44" y1="17" x2="48" y2="18" stroke="#1f2937" stroke-width="1.5"/>
+            <!-- Передние и задние лапки (анимированные) -->
+            <rect x="14" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="20" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="26" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="30" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+        </svg>`;
     }
 
-    // Создаем котов на странице
+    // Спавн стаи котов на лужайке
     for (let i = 0; i < numCats; i++) {
-        const catContainer = document.createElement('div');
-        catContainer.className = 'pixel-cat';
-        
-        const catMesh = document.createElement('div');
-        catMesh.className = 'cat-mesh';
-        catContainer.appendChild(catMesh);
-        document.body.appendChild(catContainer);
+        const catEl = document.createElement('div');
+        catEl.className = 'pixel-cat';
+        document.body.appendChild(catEl);
+
+        const breed = catBreeds[i % catBreeds.length];
 
         cats.push({
-            container: catContainer,
-            mesh: catMesh,
-            skin: skins[i % skins.length],
-            x: Math.random() * (window.innerWidth - 100) + 30,
-            y: Math.random() * (window.innerHeight - 100) + 30,
-            vx: (Math.random() > 0.5 ? 2.5 : -2.5),
+            element: catEl,
+            bodyColor: breed.body,
+            eyeColor: breed.eye,
+            x: Math.random() * (window.innerWidth - 120) + 40,
+            y: Math.random() * (window.innerHeight - 120) + 40,
+            vx: (Math.random() > 0.5 ? 2 : -2),
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -279,7 +267,7 @@
             position: relative;
         }
 
-        /* 8-битная текстура травы на фоне */
+        /* 8-битная текстура травы */
         body::before {
             content: "";
             position: absolute;
@@ -292,18 +280,18 @@
             z-index: 1;
         }
 
-        /* Ретро-карточка таймера в пиксельном стиле */
+        /* Ретро-карточка таймера */
         .container {
             text-align: center;
             background: white;
             padding: 40px;
-            border-radius: 4px; /* Меньше скруглений для 8-бит стиля */
+            border-radius: 4px;
             box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 420px;
             position: relative;
             z-index: 10;
-            border: 6px solid #1f2937; /* Жирная пиксельная рамка */
+            border: 6px solid #1f2937;
         }
 
         h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; color: #1f2937; }
@@ -340,7 +328,7 @@
         .share-box { margin-top: 15px; display: none; }
         .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
 
-        /* Препятствия: Олдскульные серые булыжники */
+        /* Олдскульные серые камни */
         .rock {
             position: absolute;
             width: 48px;
@@ -351,31 +339,28 @@
             z-index: 2;
         }
 
-        /* 👾 СЛОЖНЫЙ CSS-КОТ (Базовый холст) */
+        /* ИНТЕРАКТИВНЫЕ КОТЫ */
         .pixel-cat {
             position: absolute;
-            width: 32px;
-            height: 32px;
+            width: 48px;
+            height: 36px;
             z-index: 5;
             will-change: left, top;
+            image-rendering: pixelated; /* Сохраняет четкость пикселей */
         }
-
-        /* Каждый пиксель кота прорисован через тени box-shadow холста */
-        .cat-mesh {
-            width: 2px;
-            height: 2px;
-            background: transparent;
-            position: absolute;
+        .pixel-cat svg {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
-<!-- Препятствия на лужайке -->
-<div class="rock" style="top: 10%; left: 15%;"></div>
-<div class="rock" style="top: 25%; right: 10%;"></div>
-<div class="rock" style="bottom: 15%; left: 12%;"></div>
-<div class="rock" style="bottom: 20%; right: 18%;"></div>
+<!-- Камни-препятствия -->
+<div class="rock" style="top: 12%; left: 15%;"></div>
+<div class="rock" style="top: 25%; right: 12%;"></div>
+<div class="rock" style="bottom: 15%; left: 10%;"></div>
+<div class="rock" style="bottom: 22%; right: 20%;"></div>
 
 <div class="container" id="main-card">
     <h1 id="status-title">СТАТУС VPN</h1>
@@ -397,7 +382,7 @@
 </div>
 
 <script>
-    // 1. ЛОГИКА ССЫЛОК И ОБРАТНОГО ОТСЧЕТА
+    // 1. ЛОГИКА ТАЙМЕРА
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
@@ -450,75 +435,66 @@
         timerEl.innerText = "00:00:00";
     }
 
-    // 2. ПОПИКСЕЛЬНАЯ МАТРИЦА СТАИ ДЕТАЛЬНЫХ КОТОВ
+    // 2. ДВИЖОК ДЛЯ СТАИ ДЕТАЛЬНЫХ SVG-КОТОВ
     const mainCard = document.getElementById('main-card');
     const rocks = document.querySelectorAll('.rock');
     const cats = [];
     const numCats = 4;
 
-    // Палитры окрасов (C — основной, S — тень, E — глаза)
-    const skins = [
-        { c: '#2d3748', s: '#1a202c', e: '#f6e05e' }, // Черный кот, желтые глаза
-        { c: '#ed8936', s: '#dd6b20', e: '#ffffff' }, // Рыжий кот, белые глаза
-        { c: '#a0aec0', s: '#718096', e: '#fc8181' }, // Серый кот, розовые глаза
-        { c: '#f7fafc', s: '#e2e8f0', e: '#63b3ed' }  // Белый кот, голубые глаза
+    // Цвета для разных пород котов (тело, глаза)
+    const catBreeds = [
+        { body: '#1f2937', eye: '#f6e05e' }, // Черный с желтыми глазами
+        { body: '#ed8936', eye: '#ffffff' }, // Рыжий с белыми глазами
+        { body: '#718096', eye: '#fc8181' }, // Серый с розовыми глазами
+        { body: '#f7fafc', eye: '#63b3ed' }  // Белый с голубыми глазами
     ];
 
-    // Генерация детальной карты теней кота (сетка 16x16 пикселей, шаг 2px)
-    function buildCatShadows(color, shadow, eye, legPhase) {
-        const C = color, S = shadow, E = eye, X = 'transparent';
-        
-        // Матрица кота построчно
-        const matrix = [
-            [X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X],
-            [X,X,X,X,X,X,X,X,X,X,C,X,X,C,X,X], // Уши
-            [X,X,X,X,X,X,X,X,X,C,C,C,C,C,C,X], // Голова
-            [X,X,X,X,X,X,X,X,X,C,S,C,C,S,C,X], 
-            [X,X,X,X,X,X,X,X,X,C,E,C,C,E,C,X], // Глаза (со зрачками)
-            [X,X,X,X,X,X,C,X,X,C,C,C,C,C,C,X], // Шея + начало хвоста
-            [X,X,X,X,X,C,C,X,C,C,C,C,C,C,C,C], // Спина
-            [X,X,X,X,C,C,X,X,C,C,C,C,C,C,C,C], // Тело
-            [X,X,X,C,C,X,X,X,C,C,C,C,C,C,C,C], 
-            [X,X,C,C,X,X,X,X,C,C,C,C,C,C,C,C], 
-            [X,C,C,X,X,X,X,X,C,S,S,S,S,S,C,C], // Брюшко
-            [C,C,X,X,X,X,X,X,S,S,S,S,S,S,S,X]
-        ];
+    // Шаблон создания пиксельного кота через векторный код (SVG)
+    function createCatSVG(bodyColor, eyeColor, legPhase) {
+        // Меняем положение лапок в зависимости от фазы анимации
+        const legY1 = legPhase === 0 ? 28 : 30;
+        const legY2 = legPhase === 0 ? 30 : 28;
 
-        // Динамическая анимация лап в зависимости от текущего кадра (legPhase)
-        if (legPhase === 0) {
-            matrix.push([X,X,X,X,X,X,X,X,C,X,X,C,X,C,X,X]); // Лапы фаза 1
-            matrix.push([X,X,X,X,X,X,X,X,C,C,X,C,X,C,C,X]);
-        } else {
-            matrix.push([X,X,X,X,X,X,X,X,X,C,X,C,X,X,C,X]); // Лапы фаза 2
-            matrix.push([X,X,X,X,X,X,X,X,X,C,C,X,C,X,C,C]);
-        }
-
-        // Собираем матрицу в строку CSS box-shadow
-        let shadows = [];
-        for (let row = 0; row < matrix.length; row++) {
-            for (let col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] !== X) {
-                    shadows.push(`${col * 2}px ${row * 2}px 0 ${matrix[row][col]}`);
-                }
-            }
-        }
-        return shadows.join(', ');
+        return `
+        <svg viewBox="0 0 48 36" xmlns="http://w3.org">
+            <!-- Хвост -->
+            <rect x="2" y="12" width="6" height="12" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="8" y="16" width="6" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Туловище -->
+            <rect x="12" y="16" width="22" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Голова -->
+            <rect x="30" y="6" width="14" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Ушки -->
+            <polygon points="32,6 36,0 36,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <polygon points="40,6 44,0 44,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <!-- Глаза -->
+            <rect x="38" y="10" width="4" height="4" fill="${eyeColor}"/>
+            <rect x="40" y="10" width="2" height="4" fill="#000"/> <!-- Зрачок -->
+            <!-- Мордочка/Носик -->
+            <rect x="44" y="14" width="2" height="2" fill="#fc8181"/>
+            <!-- Усы -->
+            <line x1="44" y1="16" x2="48" y2="15" stroke="#1f2937" stroke-width="1.5"/>
+            <line x1="44" y1="17" x2="48" y2="18" stroke="#1f2937" stroke-width="1.5"/>
+            <!-- Передние и задние лапки (анимированные) -->
+            <rect x="14" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="20" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="26" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+            <rect x="30" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
+        </svg>`;
     }
 
-    // Создаем котов на странице
+    // Спавн стаи котов на лужайке
     for (let i = 0; i < numCats; i++) {
-        const catContainer = document.createElement('div');
-        catContainer.className = 'pixel-cat';
-        
-        const catMesh = document.createElement('div');
-        catMesh.className = 'cat-mesh';
-        catContainer.appendChild(catMesh);
-        document.body.appendChild(catContainer);
+        const catEl = document.createElement('div');
+        catEl.className = 'pixel-cat';
+        document.body.appendChild(catEl);
+
+        const breed = catBreeds[i % catBreeds.length];
 
         cats.push({
-            container: catContainer,
-            mesh: catMesh,
-            skin: skins[i % skins.length],
-            x: Math.random() * (window.innerWidth - 100) + 30,
-            y: Math.random() * (window.innerHeight - 100) + 30,
-            vx: (Math.random() > 0.5 ? 2.5 : -2.5),
+            element: catEl,
+            bodyColor: breed.body,
+            eyeColor: breed.eye,
+            x: Math.random() * (window.innerWidth - 120) + 40,
+            y: Math.random() * (window.innerHeight - 120) + 40,
+            vx: (Math.random() > 0.5 ? 2 : -2),
