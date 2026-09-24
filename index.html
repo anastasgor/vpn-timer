@@ -12,26 +12,39 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #2ed573;
+            background-color: #2ed573; /* Зеленая поляна */
             overflow: hidden;
             position: relative;
         }
 
-        /* Карточка таймера */
+        /* 8-битная текстура травы на фоне */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 32px 32px;
+            opacity: 0.25;
+            z-index: 1;
+        }
+
+        /* Ретро-карточка таймера в пиксельном стиле */
         .container {
             text-align: center;
             background: white;
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-radius: 4px; /* Меньше скруглений для 8-бит стиля */
+            box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 420px;
             position: relative;
             z-index: 10;
-            border: 4px solid #1f2937;
+            border: 6px solid #1f2937; /* Жирная пиксельная рамка */
         }
 
-        h1 { font-size: 24px; margin-bottom: 20px; }
+        h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; color: #1f2937; }
         .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
         .status-active { color: #dc2626; }
         .status-inactive { color: #10b981; }
@@ -39,92 +52,90 @@
         .admin-panel {
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 2px dashed #e5e7eb;
+            border-top: 4px dashed #1f2937;
             display: none;
-            background: #f9fafb;
-            border-radius: 8px;
+            background: #f3f4f6;
             padding: 15px;
         }
         .admin-panel input {
             padding: 8px;
             margin: 10px 0;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            border: 3px solid #1f2937;
             font-size: 14px;
             width: 80%;
         }
         .btn {
             padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
+            border: 3px solid #1f2937;
             font-weight: bold;
             cursor: pointer;
             margin: 5px;
+            box-shadow: 4px 4px 0px #1f2937;
+            text-transform: uppercase;
         }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #1f2937; }
         .btn-start { background-color: #2563eb; color: white; }
         .share-box { margin-top: 15px; display: none; }
-        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; }
+        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
 
-        /* Препятствия: Камни */
+        /* Препятствия: Олдскульные серые булыжники */
         .rock {
             position: absolute;
-            width: 50px;
-            height: 40px;
+            width: 48px;
+            height: 36px;
             background-color: #4b5563;
             border: 4px solid #1f2937;
-            border-radius: 8px;
+            box-shadow: inset -4px -4px 0px #374151, inset 4px 4px 0px #9ca3af;
             z-index: 2;
         }
 
-        /* Упрощенный дизайн пиксельного кота */
+        /* 👾 СЛОЖНЫЙ CSS-КОТ (Базовый холст) */
         .pixel-cat {
             position: absolute;
-            width: 40px;
-            height: 30px;
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
             z-index: 5;
             will-change: left, top;
-            border: 3px solid #1f2937;
         }
-        /* Хвостик и ушки кота рисуем через псевдоэлементы */
-        .pixel-cat::before {
-            content: "▲ ▲";
+
+        /* Каждый пиксель кота прорисован через тени box-shadow холста */
+        .cat-mesh {
+            width: 2px;
+            height: 2px;
+            background: transparent;
             position: absolute;
-            top: -14px; left: 4px;
-            font-size: 12px;
-            letter-spacing: 6px;
         }
     </style>
 </head>
 <body>
 
-<!-- Препятствия-камни -->
-<div class="rock" style="top: 15%; left: 15%;"></div>
-<div class="rock" style="top: 20%; right: 15%;"></div>
-<div class="rock" style="bottom: 20%; left: 10%;"></div>
-<div class="rock" style="bottom: 15%; right: 20%;"></div>
+<!-- Препятствия на лужайке -->
+<div class="rock" style="top: 10%; left: 15%;"></div>
+<div class="rock" style="top: 25%; right: 10%;"></div>
+<div class="rock" style="bottom: 15%; left: 12%;"></div>
+<div class="rock" style="bottom: 20%; right: 18%;"></div>
 
 <div class="container" id="main-card">
-    <h1 id="status-title">Определение статуса...</h1>
+    <h1 id="status-title">СТАТУС VPN</h1>
     <div id="countdown" class="timer">00:00:00</div>
 
     <!-- АДМИН-ПАНЕЛЬ -->
     <div id="admin-block" class="admin-panel">
-        <h3>Панель администратора</h3>
+        <h3>УПРАВЛЕНИЕ ТАЙМЕРОМ</h3>
         <label>Укажите дату и время отключения:<br>
             <input type="datetime-local" id="target-time">
         </label><br>
-        <button class="btn btn-start" id="btn-generate">Сгенерировать ссылку</button>
+        <button class="btn btn-start" id="btn-generate">СОЗДАТЬ ССЫЛКУ</button>
         
         <div id="share-block" class="share-box">
-            <p style="font-size: 14px; margin: 5px 0;">Скопируйте эту ссылку и отправьте коллегам:</p>
+            <p style="font-size: 14px; margin: 5px 0;">Передайте ссылку сотрудникам:</p>
             <input type="text" id="share-url" class="share-input" readonly onclick="this.select()">
         </div>
     </div>
 </div>
 
 <script>
-    // 1. ЛОГИКА ТАЙМЕРА И СТАТУСА
+    // 1. ЛОГИКА ССЫЛОК И ОБРАТНОГО ОТСЧЕТА
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
@@ -137,7 +148,7 @@
 
     document.getElementById('btn-generate').addEventListener('click', () => {
         const inputTime = document.getElementById('target-time').value;
-        if (!inputTime) return alert("Пожалуйста, выберите дату и время!");
+        if (!inputTime) return alert("Выберите дату и время!");
         const baseUrl = window.location.href.split('?');
         const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
         document.getElementById('share-url').value = generatedUrl;
@@ -148,13 +159,13 @@
         const now = new Date();
         const diff = targetDate - now;
         if (diff <= 0) {
-            titleEl.innerText = "VPN отключен";
+            titleEl.innerText = "VPN ОТКЛЮЧЕН";
             titleEl.className = "status-inactive";
             timerEl.innerText = "00:00:00";
             if (timerIntervalId) clearInterval(timerIntervalId);
             return;
         }
-        titleEl.innerText = "До отключения VPN:";
+        titleEl.innerText = "ДО ОТКЛЮЧЕНИЯ VPN:";
         titleEl.className = "status-active";
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -172,96 +183,342 @@
     } else { showDisconnected(); }
 
     function showDisconnected() {
-        titleEl.innerText = "VPN отключен";
+        titleEl.innerText = "VPN ОТКЛЮЧЕН";
         titleEl.className = "status-inactive";
         timerEl.innerText = "00:00:00";
     }
 
-    // 2. ОТКАТ ОУСТОЙЧИВЫЙ ДВИЖОК КОТОВ
+    // 2. ПОПИКСЕЛЬНАЯ МАТРИЦА СТАИ ДЕТАЛЬНЫХ КОТОВ
     const mainCard = document.getElementById('main-card');
     const rocks = document.querySelectorAll('.rock');
     const cats = [];
-    const colors = ['#1f2937', '#f59e0b', '#6b7280', '#f8fafc']; // Черный, Рыжий, Серый, Белый
     const numCats = 4;
 
-    for (let i = 0; i < numCats; i++) {
-        const catEl = document.createElement('div');
-        catEl.className = 'pixel-cat';
-        catEl.style.backgroundColor = colors[i % colors.length];
-        catEl.style.color = colors[i % colors.length]; // Для цвета ушек
-        document.body.appendChild(catEl);
+    // Палитры окрасов (C — основной, S — тень, E — глаза)
+    const skins = [
+        { c: '#2d3748', s: '#1a202c', e: '#f6e05e' }, // Черный кот, желтые глаза
+        { c: '#ed8936', s: '#dd6b20', e: '#ffffff' }, // Рыжий кот, белые глаза
+        { c: '#a0aec0', s: '#718096', e: '#fc8181' }, // Серый кот, розовые глаза
+        { c: '#f7fafc', s: '#e2e8f0', e: '#63b3ed' }  // Белый кот, голубые глаза
+    ];
 
-        cats.push({
-            element: catEl,
-            x: Math.random() * (window.innerWidth - 80) + 20,
-            y: Math.random() * (window.innerHeight - 80) + 20,
-            vx: (Math.random() > 0.5 ? 2 : -2),
-            vy: (Math.random() > 0.5 ? 2 : -2),
-            speedMultiplier: 1,
-            width: 40,
-            height: 30
-        });
+    // Генерация детальной карты теней кота (сетка 16x16 пикселей, шаг 2px)
+    function buildCatShadows(color, shadow, eye, legPhase) {
+        const C = color, S = shadow, E = eye, X = 'transparent';
+        
+        // Матрица кота построчно
+        const matrix = [
+            [X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X],
+            [X,X,X,X,X,X,X,X,X,X,C,X,X,C,X,X], // Уши
+            [X,X,X,X,X,X,X,X,X,C,C,C,C,C,C,X], // Голова
+            [X,X,X,X,X,X,X,X,X,C,S,C,C,S,C,X], 
+            [X,X,X,X,X,X,X,X,X,C,E,C,C,E,C,X], // Глаза (со зрачками)
+            [X,X,X,X,X,X,C,X,X,C,C,C,C,C,C,X], // Шея + начало хвоста
+            [X,X,X,X,X,C,C,X,C,C,C,C,C,C,C,C], // Спина
+            [X,X,X,X,C,C,X,X,C,C,C,C,C,C,C,C], // Тело
+            [X,X,X,C,C,X,X,X,C,C,C,C,C,C,C,C], 
+            [X,X,C,C,X,X,X,X,C,C,C,C,C,C,C,C], 
+            [X,C,C,X,X,X,X,X,C,S,S,S,S,S,C,C], // Брюшко
+            [C,C,X,X,X,X,X,X,S,S,S,S,S,S,S,X]
+        ];
+
+        // Динамическая анимация лап в зависимости от текущего кадра (legPhase)
+        if (legPhase === 0) {
+            matrix.push([X,X,X,X,X,X,X,X,C,X,X,C,X,C,X,X]); // Лапы фаза 1
+            matrix.push([X,X,X,X,X,X,X,X,C,C,X,C,X,C,C,X]);
+        } else {
+            matrix.push([X,X,X,X,X,X,X,X,X,C,X,C,X,X,C,X]); // Лапы фаза 2
+            matrix.push([X,X,X,X,X,X,X,X,X,C,C,X,C,X,C,C]);
+        }
+
+        // Собираем матрицу в строку CSS box-shadow
+        let shadows = [];
+        for (let row = 0; row < matrix.length; row++) {
+            for (let col = 0; col < matrix[row].length; col++) {
+                if (matrix[row][col] !== X) {
+                    shadows.push(`${col * 2}px ${row * 2}px 0 ${matrix[row][col]}`);
+                }
+            }
+        }
+        return shadows.join(', ');
     }
 
-    // Безопасный игровой цикл через setInterval (25 кадров в секунду)
-    setInterval(() => {
-        const cardRect = mainCard.getBoundingClientRect();
+    // Создаем котов на странице
+    for (let i = 0; i < numCats; i++) {
+        const catContainer = document.createElement('div');
+        catContainer.className = 'pixel-cat';
+        
+        const catMesh = document.createElement('div');
+        catMesh.className = 'cat-mesh';
+        catContainer.appendChild(catMesh);
+        document.body.appendChild(catContainer);
 
-        cats.forEach(cat => {
-            let nextX = cat.x + cat.vx * cat.speedMultiplier;
-            let nextY = cat.y + cat.vy * cat.currentSpeedMultiplier; // Исправлено на cat.speedMultiplier
-            nextY = cat.y + cat.vy * cat.speedMultiplier;
+        cats.push({
+            container: catContainer,
+            mesh: catMesh,
+            skin: skins[i % skins.length],
+            x: Math.random() * (window.innerWidth - 100) + 30,
+            y: Math.random() * (window.innerHeight - 100) + 30,
+            vx: (Math.random() > 0.5 ? 2.5 : -2.5),
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус VPN</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #2ed573; /* Зеленая поляна */
+            overflow: hidden;
+            position: relative;
+        }
 
-            // Стенки экрана
-            if (nextX < 0 || nextX > window.innerWidth - cat.width) { cat.vx *= -1; nextX = cat.x; }
-            if (nextY < 0 || nextY > window.innerHeight - cat.height) { cat.vy *= -1; nextY = cat.y; }
+        /* 8-битная текстура травы на фоне */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 32px 32px;
+            opacity: 0.25;
+            z-index: 1;
+        }
 
-            // Столкновение с карточкой таймера
-            if (nextX + cat.width > cardRect.left && nextX < cardRect.right && 
-                nextY + cat.height > cardRect.top && nextY < cardRect.bottom) {
-                if (cat.x + cat.width <= cardRect.left || cat.x >= cardRect.right) { cat.vx *= -1; } 
-                else { cat.vy *= -1; }
-                nextX = cat.x; nextY = cat.y;
-            }
+        /* Ретро-карточка таймера в пиксельном стиле */
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 4px; /* Меньше скруглений для 8-бит стиля */
+            box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10;
+            border: 6px solid #1f2937; /* Жирная пиксельная рамка */
+        }
 
-            // Столкновение с камнями
-            rocks.forEach(rock => {
-                const rockRect = rock.getBoundingClientRect();
-                if (nextX + cat.width > rockRect.left && nextX < rockRect.right && 
-                    nextY + cat.height > rockRect.top && nextY < rockRect.bottom) {
-                    cat.vx *= -1; cat.vy *= -1;
-                    nextX = cat.x; nextY = cat.y;
-                }
-            });
+        h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; color: #1f2937; }
+        .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .status-active { color: #dc2626; }
+        .status-inactive { color: #10b981; }
+        
+        .admin-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 4px dashed #1f2937;
+            display: none;
+            background: #f3f4f6;
+            padding: 15px;
+        }
+        .admin-panel input {
+            padding: 8px;
+            margin: 10px 0;
+            border: 3px solid #1f2937;
+            font-size: 14px;
+            width: 80%;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: 3px solid #1f2937;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 4px 4px 0px #1f2937;
+            text-transform: uppercase;
+        }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #1f2937; }
+        .btn-start { background-color: #2563eb; color: white; }
+        .share-box { margin-top: 15px; display: none; }
+        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
 
-            cat.x = nextX;
-            cat.y = nextY;
+        /* Препятствия: Олдскульные серые булыжники */
+        .rock {
+            position: absolute;
+            width: 48px;
+            height: 36px;
+            background-color: #4b5563;
+            border: 4px solid #1f2937;
+            box-shadow: inset -4px -4px 0px #374151, inset 4px 4px 0px #9ca3af;
+            z-index: 2;
+        }
 
-            cat.element.style.left = cat.x + 'px';
-            cat.element.style.top = cat.y + 'px';
-            cat.element.style.transform = cat.vx > 0 ? 'scaleX(1)' : 'scaleX(-1)';
+        /* 👾 СЛОЖНЫЙ CSS-КОТ (Базовый холст) */
+        .pixel-cat {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            z-index: 5;
+            will-change: left, top;
+        }
 
-            if (cat.speedMultiplier > 1) cat.speedMultiplier -= 0.05;
-        });
-    }, 40);
+        /* Каждый пиксель кота прорисован через тени box-shadow холста */
+        .cat-mesh {
+            width: 2px;
+            height: 2px;
+            background: transparent;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
 
-    // Страх перед мыжкой
-    document.addEventListener('mousemove', (e) => {
-        cats.forEach(cat => {
-            const centerX = cat.x + cat.width / 2;
-            const centerY = cat.y + cat.height / 2;
-            const diffX = e.clientX - centerX;
-            const diffY = e.clientY - centerY;
-            const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+<!-- Препятствия на лужайке -->
+<div class="rock" style="top: 10%; left: 15%;"></div>
+<div class="rock" style="top: 25%; right: 10%;"></div>
+<div class="rock" style="bottom: 15%; left: 12%;"></div>
+<div class="rock" style="bottom: 20%; right: 18%;"></div>
 
-            if (distance < 120) {
-                cat.speedMultiplier = 3.5;
-                cat.vx = diffX > 0 ? -2 : 2;
-                cat.vy = diffY > 0 ? -2 : 2;
-            }
-        });
+<div class="container" id="main-card">
+    <h1 id="status-title">СТАТУС VPN</h1>
+    <div id="countdown" class="timer">00:00:00</div>
+
+    <!-- АДМИН-ПАНЕЛЬ -->
+    <div id="admin-block" class="admin-panel">
+        <h3>УПРАВЛЕНИЕ ТАЙМЕРОМ</h3>
+        <label>Укажите дату и время отключения:<br>
+            <input type="datetime-local" id="target-time">
+        </label><br>
+        <button class="btn btn-start" id="btn-generate">СОЗДАТЬ ССЫЛКУ</button>
+        
+        <div id="share-block" class="share-box">
+            <p style="font-size: 14px; margin: 5px 0;">Передайте ссылку сотрудникам:</p>
+            <input type="text" id="share-url" class="share-input" readonly onclick="this.select()">
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. ЛОГИКА ССЫЛОК И ОБРАТНОГО ОТСЧЕТА
+    const urlParams = new URLSearchParams(window.location.search);
+    const timeParam = urlParams.get('time');
+    const isAdmin = urlParams.get('admin') === 'true';
+
+    if (isAdmin) document.getElementById('admin-block').style.display = 'block';
+
+    const titleEl = document.getElementById('status-title');
+    const timerEl = document.getElementById('countdown');
+    let timerIntervalId = null;
+
+    document.getElementById('btn-generate').addEventListener('click', () => {
+        const inputTime = document.getElementById('target-time').value;
+        if (!inputTime) return alert("Выберите дату и время!");
+        const baseUrl = window.location.href.split('?');
+        const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
+        document.getElementById('share-url').value = generatedUrl;
+        document.getElementById('share-block').style.display = 'block';
     });
-</script>
 
-</body>
-</html>
+    function updateSeconds(targetDate) {
+        const now = new Date();
+        const diff = targetDate - now;
+        if (diff <= 0) {
+            titleEl.innerText = "VPN ОТКЛЮЧЕН";
+            titleEl.className = "status-inactive";
+            timerEl.innerText = "00:00:00";
+            if (timerIntervalId) clearInterval(timerIntervalId);
+            return;
+        }
+        titleEl.innerText = "ДО ОТКЛЮЧЕНИЯ VPN:";
+        titleEl.className = "status-active";
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        const pad = (num) => String(num).padStart(2, '0');
+        timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    if (timeParam) {
+        const targetDate = new Date(timeParam);
+        if (!isNaN(targetDate.getTime())) {
+            updateSeconds(targetDate);
+            timerIntervalId = setInterval(() => updateSeconds(targetDate), 1000);
+        } else { showDisconnected(); }
+    } else { showDisconnected(); }
+
+    function showDisconnected() {
+        titleEl.innerText = "VPN ОТКЛЮЧЕН";
+        titleEl.className = "status-inactive";
+        timerEl.innerText = "00:00:00";
+    }
+
+    // 2. ПОПИКСЕЛЬНАЯ МАТРИЦА СТАИ ДЕТАЛЬНЫХ КОТОВ
+    const mainCard = document.getElementById('main-card');
+    const rocks = document.querySelectorAll('.rock');
+    const cats = [];
+    const numCats = 4;
+
+    // Палитры окрасов (C — основной, S — тень, E — глаза)
+    const skins = [
+        { c: '#2d3748', s: '#1a202c', e: '#f6e05e' }, // Черный кот, желтые глаза
+        { c: '#ed8936', s: '#dd6b20', e: '#ffffff' }, // Рыжий кот, белые глаза
+        { c: '#a0aec0', s: '#718096', e: '#fc8181' }, // Серый кот, розовые глаза
+        { c: '#f7fafc', s: '#e2e8f0', e: '#63b3ed' }  // Белый кот, голубые глаза
+    ];
+
+    // Генерация детальной карты теней кота (сетка 16x16 пикселей, шаг 2px)
+    function buildCatShadows(color, shadow, eye, legPhase) {
+        const C = color, S = shadow, E = eye, X = 'transparent';
+        
+        // Матрица кота построчно
+        const matrix = [
+            [X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X],
+            [X,X,X,X,X,X,X,X,X,X,C,X,X,C,X,X], // Уши
+            [X,X,X,X,X,X,X,X,X,C,C,C,C,C,C,X], // Голова
+            [X,X,X,X,X,X,X,X,X,C,S,C,C,S,C,X], 
+            [X,X,X,X,X,X,X,X,X,C,E,C,C,E,C,X], // Глаза (со зрачками)
+            [X,X,X,X,X,X,C,X,X,C,C,C,C,C,C,X], // Шея + начало хвоста
+            [X,X,X,X,X,C,C,X,C,C,C,C,C,C,C,C], // Спина
+            [X,X,X,X,C,C,X,X,C,C,C,C,C,C,C,C], // Тело
+            [X,X,X,C,C,X,X,X,C,C,C,C,C,C,C,C], 
+            [X,X,C,C,X,X,X,X,C,C,C,C,C,C,C,C], 
+            [X,C,C,X,X,X,X,X,C,S,S,S,S,S,C,C], // Брюшко
+            [C,C,X,X,X,X,X,X,S,S,S,S,S,S,S,X]
+        ];
+
+        // Динамическая анимация лап в зависимости от текущего кадра (legPhase)
+        if (legPhase === 0) {
+            matrix.push([X,X,X,X,X,X,X,X,C,X,X,C,X,C,X,X]); // Лапы фаза 1
+            matrix.push([X,X,X,X,X,X,X,X,C,C,X,C,X,C,C,X]);
+        } else {
+            matrix.push([X,X,X,X,X,X,X,X,X,C,X,C,X,X,C,X]); // Лапы фаза 2
+            matrix.push([X,X,X,X,X,X,X,X,X,C,C,X,C,X,C,C]);
+        }
+
+        // Собираем матрицу в строку CSS box-shadow
+        let shadows = [];
+        for (let row = 0; row < matrix.length; row++) {
+            for (let col = 0; col < matrix[row].length; col++) {
+                if (matrix[row][col] !== X) {
+                    shadows.push(`${col * 2}px ${row * 2}px 0 ${matrix[row][col]}`);
+                }
+            }
+        }
+        return shadows.join(', ');
+    }
+
+    // Создаем котов на странице
+    for (let i = 0; i < numCats; i++) {
+        const catContainer = document.createElement('div');
+        catContainer.className = 'pixel-cat';
+        
+        const catMesh = document.createElement('div');
+        catMesh.className = 'cat-mesh';
+        catContainer.appendChild(catMesh);
+        document.body.appendChild(catContainer);
+
+        cats.push({
+            container: catContainer,
+            mesh: catMesh,
+            skin: skins[i % skins.length],
+            x: Math.random() * (window.innerWidth - 100) + 30,
+            y: Math.random() * (window.innerHeight - 100) + 30,
+            vx: (Math.random() > 0.5 ? 2.5 : -2.5),
