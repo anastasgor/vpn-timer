@@ -5,15 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Статус VPN</title>
     <style>
+        /* Базовые стили */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             background-color: #f3f4f6;
             color: #1f2937;
+            overflow-x: hidden;
         }
         .container {
             text-align: center;
@@ -23,12 +26,15 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             width: 100%;
             max-width: 450px;
+            margin: auto; /* Центрируем карточку по вертикали */
+            z-index: 10;
         }
         h1 { font-size: 24px; margin-bottom: 20px; }
         .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
         .status-active { color: #dc2626; }
         .status-inactive { color: #10b981; }
         
+        /* Панель администратора */
         .admin-panel {
             margin-top: 30px;
             padding-top: 20px;
@@ -57,10 +63,7 @@
         }
         .btn-start { background-color: #2563eb; color: white; }
         .btn-start:hover { background-color: #1d4ed8; }
-        .share-box {
-            margin-top: 15px;
-            display: none;
-        }
+        .share-box { margin-top: 15px; display: none; }
         .share-input {
             width: 90%;
             padding: 8px;
@@ -69,6 +72,54 @@
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             text-align: center;
+        }
+
+        /* 👾 ПИКСЕЛЬНЫЙ ФУТЕР И АНИМАЦИЯ */
+        .pixel-footer {
+            width: 100%;
+            height: 120px;
+            position: relative;
+            background-color: #2ed573; /* Цвет травы */
+            border-top: 6px solid #26af5f; /* Земляной шов */
+            image-rendering: pixelated; /* Делает пиксели четкими без размытия */
+        }
+        
+        /* Текстура земли в стиле 8-бит */
+        .pixel-footer::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 16px 16px;
+            opacity: 0.15;
+        }
+
+        /* Кот из спрайта (анимация через CSS) */
+        .pixel-cat {
+            width: 48px;
+            height: 32px;
+            position: absolute;
+            bottom: 40px;
+            left: -50px;
+            /* Встраиваем легкий пиксельный GIF черного кота без CORS ограничений */
+            background-image: url('https://pixabay.com');
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+            
+            /* Заставляем кота идти слева направо */
+            animation: walkAcross 15s linear infinite;
+        }
+
+        /* Анимация движения через весь экран */
+        @keyframes walkAcross {
+            0% { left: -50px; transform: scaleX(1); }
+            49% { left: calc(100% + 50px); transform: scaleX(1); }
+            50% { left: calc(100% + 50px); transform: scaleX(-1); } /* Разворачиваем кота назад */
+            99% { left: -50px; transform: scaleX(-1); }
+            100% { left: -50px; transform: scaleX(1); }
         }
     </style>
 </head>
@@ -93,13 +144,16 @@
     </div>
 </div>
 
+<!-- Блок футера с анимацией -->
+<div class="pixel-footer">
+    <div class="pixel-cat"></div>
+</div>
+
 <script>
-    // Получаем параметры из адресной строки страницы
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
 
-    // Показываем админку, если в ссылке есть ?admin=true
     if (isAdmin) {
         document.getElementById('admin-block').style.display = 'block';
     }
@@ -108,38 +162,29 @@
     const timerEl = document.getElementById('countdown');
     let intervalId = null;
 
-    // Функция генерации ссылки для администратора
     document.getElementById('btn-generate').addEventListener('click', () => {
         const inputTime = document.getElementById('target-time').value;
         if (!inputTime) {
             alert("Пожалуйста, выберите дату и время!");
             return;
         }
-        // Формируем чистый URL без текущих параметров и добавляем время
-        const baseUrl = window.location.href.split('?')[0];
-        const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
+        const baseUrl = window.location.href.split('?');
+        const generatedUrl = `${baseUrl[0]}?time=${encodeURIComponent(inputTime)}`;
         
         const shareInput = document.getElementById('share-url');
         shareInput.value = generatedUrl;
         document.getElementById('share-block').style.display = 'block';
-        
-        // Автоматически выделяем текст ссылки для удобства копирования
         shareInput.select();
-        alert("Ссылка успешно создана и выведена ниже! Скопируйте её.");
+        alert("Ссылка успешно создана и выведена ниже!");
     });
 
-    // Логика работы таймера для пользователей
     if (timeParam) {
         const targetDate = new Date(timeParam);
-
-        // Проверяем, корректная ли дата передана в ссылке
         if (!isNaN(targetDate.getTime())) {
-            
             function updateSeconds() {
                 const now = new Date();
                 const diff = targetDate - now;
 
-                // Если время вышло
                 if (diff <= 0) {
                     titleEl.innerText = "VPN отключен";
                     titleEl.className = "status-inactive";
@@ -153,7 +198,6 @@
                 titleEl.className = "status-active";
                 timerEl.className = "timer status-active";
 
-                // Расчет времени
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -161,15 +205,12 @@
                 const pad = (num) => String(num).padStart(2, '0');
                 timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
             }
-
             updateSeconds();
             intervalId = setInterval(updateSeconds, 1000);
         } else {
-            // Если в параметре `time` передан сломанный формат текста
             showDisconnected();
         }
     } else {
-        // Если ссылка обычная (параметра `time` вообще нет)
         showDisconnected();
     }
 
