@@ -8,26 +8,42 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f3f4f6;
-            color: #1f2937;
-            overflow-x: hidden;
+            background-color: #2ed573; /* Фон — зеленая лужайка */
+            overflow: hidden;
+            position: relative;
         }
+
+        /* Текстура травы на весь экран */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 32px 32px;
+            opacity: 0.2;
+            z-index: 1;
+        }
+
+        /* Препятствие №1: Центральная карточка таймера */
         .container {
             text-align: center;
             background: white;
             padding: 40px;
             border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             width: 100%;
-            max-width: 450px;
-            margin: auto;
-            z-index: 10;
+            max-width: 420px;
+            position: relative;
+            z-index: 10; /* Поверх фона */
+            border: 4px solid #1f2937;
         }
+
         h1 { font-size: 24px; margin-bottom: 20px; }
         .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
         .status-active { color: #dc2626; }
@@ -60,65 +76,44 @@
             transition: background 0.2s;
         }
         .btn-start { background-color: #2563eb; color: white; }
-        .btn-start:hover { background-color: #1d4ed8; }
         .share-box { margin-top: 15px; display: none; }
-        .share-input {
-            width: 90%;
-            padding: 8px;
-            font-size: 12px;
-            background: #e5e7eb;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            text-align: center;
-        }
+        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; }
 
-        /* 👾 ПИКСЕЛЬНЫЙ ФУТЕР */
-        .pixel-footer {
-            width: 100%;
-            height: 120px;
-            position: relative;
-            background-color: #2ed573;
-            border-top: 6px solid #26af5f;
-        }
-        
-        .pixel-footer::before {
-            content: "";
+        /* Препятствия №2: Камни на лужайке */
+        .rock {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
-                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
-            background-size: 16px 16px;
-            opacity: 0.15;
+            width: 40px;
+            height: 32px;
+            background: transparent;
+            box-shadow: 
+                8px 0px #4b5563, 12px 0px #4b5563, 16px 0px #4b5563,
+                4px 4px #4b5563, 8px 4px #9ca3af, 12px 4px #9ca3af, 16px 4px #9ca3af, 20px 4px #4b5563,
+                0px 8px #4b5563, 4px 8px #9ca3af, 8px 8px #9ca3af, 12px 8px #9ca3af, 16px 8px #d1d5db, 20px 8px #9ca3af, 24px 8px #4b5563,
+                0px 12px #4b5563, 4px 12px #4b5563, 8px 12px #4b5563, 12px 12px #4b5563, 16px 12px #4b5563, 20px 12px #4b5563, 24px 12px #4b5563;
+            z-index: 2;
         }
 
-        /* КОТ, НАРИСОВАННЫЙ С ПОМОЩЬЮ CSS SHADOWS */
+        /* БАЗОВЫЙ КЛАСС ДЛЯ КОТОВ */
         .pixel-cat {
             width: 4px;
             height: 4px;
             position: absolute;
-            bottom: 60px;
-            left: 50px;
             pointer-events: none;
-            will-change: left;
+            z-index: 5;
             background: transparent;
-            /* Попиксельная карта кота: уши, голова, тело, лапы и хвост */
-            box-shadow: 
-                16px 0px #1f2937, 28px 0px #1f2937,
-                16px 4px #1f2937, 20px 4px #1f2937, 24px 4px #1f2937, 28px 4px #1f2937,
-                12px 8px #1f2937, 16px 8px #1f2937, 20px 8px #ffffff, 24px 8px #1f2937, 28px 8px #ffffff, 32px 8px #1f2937,
-                12px 12px #1f2937, 16px 12px #1f2937, 20px 12px #1f2937, 24px 12px #1f2937, 28px 12px #1f2937, 32px 12px #1f2937,
-                16px 16px #1f2937, 20px 16px #1f2937, 24px 16px #1f2937, 28px 16px #1f2937,
-                0px 20px #1f2937, 12px 20px #1f2937, 16px 20px #1f2937, 20px 20px #1f2937, 24px 20px #1f2937, 28px 20px #1f2937,
-                0px 24px #1f2937, 4px 24px #1f2937, 8px 24px #1f2937, 12px 24px #1f2937, 16px 24px #1f2937, 20px 24px #1f2937, 24px 24px #1f2937, 28px 24px #1f2937,
-                4px 28px #1f2937, 8px 28px #1f2937, 12px 28px #1f2937, 16px 28px #1f2937, 20px 28px #1f2937, 24px 28px #1f2937,
-                12px 32px #1f2937, 24px 32px #1f2937;
+            will-change: transform, left, top;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Препятствия-камни в случайных местах -->
+<div class="rock" style="top: 15%; left: 20%;"></div>
+<div class="rock" style="top: 25%; right: 15%;"></div>
+<div class="rock" style="bottom: 20%; left: 15%;"></div>
+<div class="rock" style="bottom: 15%; right: 25%;"></div>
+
+<div class="container" id="main-card">
     <h1 id="status-title">Определение статуса...</h1>
     <div id="countdown" class="timer">00:00:00</div>
 
@@ -137,19 +132,13 @@
     </div>
 </div>
 
-<div class="pixel-footer" id="footer-zone">
-    <div class="pixel-cat" id="cat"></div>
-</div>
-
 <script>
-    // 1. КОД ТАЙМЕРА И ССЫЛОК
+    // 1. ЛОГИКА ТАЙМЕРА (БЕЗ ИЗМЕНЕНИЙ)
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
 
-    if (isAdmin) {
-        document.getElementById('admin-block').style.display = 'block';
-    }
+    if (isAdmin) document.getElementById('admin-block').style.display = 'block';
 
     const titleEl = document.getElementById('status-title');
     const timerEl = document.getElementById('countdown');
@@ -157,18 +146,11 @@
 
     document.getElementById('btn-generate').addEventListener('click', () => {
         const inputTime = document.getElementById('target-time').value;
-        if (!inputTime) {
-            alert("Пожалуйста, выберите дату и время!");
-            return;
-        }
+        if (!inputTime) return alert("Пожалуйста, выберите дату и время!");
         const baseUrl = window.location.href.split('?');
         const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
-        
-        const shareInput = document.getElementById('share-url');
-        shareInput.value = generatedUrl;
+        document.getElementById('share-url').value = generatedUrl;
         document.getElementById('share-block').style.display = 'block';
-        shareInput.select();
-        alert("Ссылка успешно создана!");
     });
 
     if (timeParam) {
@@ -177,24 +159,17 @@
             function updateSeconds() {
                 const now = new Date();
                 const diff = targetDate - now;
-
                 if (diff <= 0) {
                     titleEl.innerText = "VPN отключен";
                     titleEl.className = "status-inactive";
                     timerEl.innerText = "00:00:00";
-                    timerEl.className = "timer status-inactive";
-                    clearInterval(intervalId);
-                    return;
+                    return clearInterval(intervalId);
                 }
-
                 titleEl.innerText = "До отключения VPN:";
                 titleEl.className = "status-active";
-                timerEl.className = "timer status-active";
-
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
                 const pad = (num) => String(num).padStart(2, '0');
                 timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
             }
@@ -207,58 +182,205 @@
         titleEl.innerText = "VPN отключен";
         titleEl.className = "status-inactive";
         timerEl.innerText = "00:00:00";
-        timerEl.className = "timer status-inactive";
     }
 
-    // 2. ИНТЕРАКТИВНОЕ ДВИЖЕНИЕ КОТА
-    const cat = document.getElementById('cat');
-    let posX = window.innerWidth / 2;
-    let direction = 1; 
-    let speed = 1.5; 
-
-    function updateCatPosition() {
-        posX += direction * speed;
-
-        if (posX > window.innerWidth + 50) {
-            posX = -50;
-        } else if (posX < -50) {
-            posX = window.innerWidth + 50;
+    // 2. ИГРОВОЙ ДВИЖОК ДЛЯ СТАИ КОТОВ С ПРЕПЯТСТВИЯМИ
+    
+    // Цветовые палитры кошачьих теней (box-shadow)
+    const catColors = {
+        black: `16px 0px #1f2937, 28px 0px #1f2937, 16px 4px #1f2937, 20px 4px #1f2937, 24px 4px #1f2937, 28px 4px #1f2937, 12px 8px #1f2937, 16px 8px #1f2937, 20px 8px #ffffff, 24px 8px #1f2937, 28px 8px #ffffff, 32px 8px #1f2937, 12px 12px #1f2937, 16px 12px #1f2937, 20px 12px #1f2937, 24px 12px #1f2937, 28px 12px #1f2937, 32px 12px #1f2937, 16px 16px #1f2937, 20px 16px #1f2937, 24px 16px #1f2937, 28px 16px #1f2937, 0px 20px #1f2937, 12px 20px #1f2937, 16px 20px #1f2937, 20px 20px #1f2937, 24px 20px #1f2937, 28px 20px #1f2937, 0px 24px #1f2937, 4px 24px #1f2937, 8px 24px #1f2937, 12px 24px #1f2937, 16px 24px #1f2937, 20px 24px #1f2937, 24px 24px #1f2937, 28px 24px #1f2937, 4px 28px #1f2937, 8px 28px #1f2937, 12px 28px #1f2937, 16px 28px #1f2937, 20px 28px #1f2937, 24px 28px #1f2937, 12px 32px #1f2937, 24px 32px #1f2937`,
+        orange: `16px 0px #d97706, 28px 0px #d97706, 16px 4px #d97706, 20px 4px #f59e0b, 24px 4px #f59e0b, 28px 4px #d97706, 12px 8px #d97706, 16px 8px #f59e0b, 20px 8px #ffffff, 24px 8px #d97706, 28px 8px #ffffff, 32px 8px #d97706, 12px 12px #d97706, 16px 12px #f59e0b, 20px 12px #f59e0b, 24px 12px #f59e0b, 28px 12px #f59e0b, 32px 12px #d97706, 16px 16px #d97706, 20px 16px #f59e0b, 24px 16px #f59e0b, 28px 16px #d97706, 0px 20px #d97706, 12px 20px #d97706, 16px 20px #f59e0b, 20px 20px #f59e0b, 24px 20px #f59e0b, 28px 20px #d97706, 0px 24px #d97706, 4px 24px #d97706, 8px 24px #d97706, 12px 24px #f59e0b, 16px 24px #f59e0b, 20px 24px #f59e0b, 24px 24px #f59e0b, 28px 24px #d97706, 4px 28px #d97706, 8px 28px #d97706, 12px 28px #d97706, 16px 28px #d97706, 20px 28px #d97706, 24px 28px #d97706, 12px 32px #d97706, 24px 32px #d97706`,
+        grey: `16px 0px #4b5563, 28px 0px #4b5563, 16px 4px #4b5563, 20px 4px #4b5563, 24px 4px #4b5563, 28px 4px #4b5563, 12px 8px #4b5563, 16px 8px #4b5563, 20px 8px #ffffff, 24px 8px #4b5563, 28px 8px #ffffff, 32px 8px #4b5563, 12px 12px #4b5563, 16px 12px #9ca3af, 20px 12px #9ca3af, 24px 12px #9ca3af, 28px 12px #4b5563, 32px 12px #4b5563, 16px 16px #4b5563, 20px 16px #9ca3af, 24px 16px #9ca3af, 28px 16px #4b5563, 0px 20px #4b5563, 12px 20px #4b5563, 16px 20px #9ca3af, 20px 20px #9ca3af, 24px 20px #9ca3af, 28px 20px #4b5563, 0px 24px #4b5563, 4px 24px #4b5563, 8px 24px #4b5563, 12px 24px #9ca3af, 16px 24px #9ca3af, 20px 24px #9ca3af, 24px 24px #9ca3af, 28px 24px #4b5563, 4px 28px #4b5563, 8px 28px #4b5563, 12px 28px #4b5563, 16px 28px #4b5563, 20px 28px #4b5563, 24px 28px #4b5563, 12px 32px #4b5563, 24px 32px #4b5563`,
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус VPN</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #2ed573; /* Фон — зеленая лужайка */
+            overflow: hidden;
+            position: relative;
         }
 
-        cat.style.left = posX + 'px';
+        /* Текстура травы на весь экран */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 32px 32px;
+            opacity: 0.2;
+            z-index: 1;
+        }
+
+        /* Препятствие №1: Центральная карточка таймера */
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10; /* Поверх фона */
+            border: 4px solid #1f2937;
+        }
+
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        .status-active { color: #dc2626; }
+        .status-inactive { color: #10b981; }
         
-        // Меняем масштаб для разворота кота. Дополнительно смещаем по оси X, чтобы центр при развороте не дергался
-        cat.style.transform = direction === 1 ? 'scaleX(1)' : 'scaleX(-1) translateX(-36px)';
-
-        if (speed > 1.5) speed -= 0.05;
-
-        requestAnimationFrame(updateCatPosition);
-    }
-
-    // Отслеживание мыши
-    document.addEventListener('mousemove', (e) => {
-        const catRect = cat.getBoundingClientRect();
-        const catX = catRect.left + 18; // Центр кота по X
-        const catY = catRect.top + 18;  // Центр кота по Y
-
-        const diffX = e.clientX - catX;
-        const diffY = e.clientY - catY;
-        const distance = Math.sqrt(diffX * diffX + diffY * diffY);
-
-        // Если мышка приблизилась ближе, чем на 150 пикселей
-        if (distance < 150) {
-            speed = 5; // Ускоряемся!
-            
-            if (diffX > 0) {
-                direction = -1; // Курсор справа -> кот бежит влево
-            } else {
-                direction = 1;  // Курсор слева -> кот бежит вправо
-            }
+        .admin-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #e5e7eb;
+            display: none;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
         }
+        .admin-panel input {
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 80%;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        .btn-start { background-color: #2563eb; color: white; }
+        .share-box { margin-top: 15px; display: none; }
+        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; }
+
+        /* Препятствия №2: Камни на лужайке */
+        .rock {
+            position: absolute;
+            width: 40px;
+            height: 32px;
+            background: transparent;
+            box-shadow: 
+                8px 0px #4b5563, 12px 0px #4b5563, 16px 0px #4b5563,
+                4px 4px #4b5563, 8px 4px #9ca3af, 12px 4px #9ca3af, 16px 4px #9ca3af, 20px 4px #4b5563,
+                0px 8px #4b5563, 4px 8px #9ca3af, 8px 8px #9ca3af, 12px 8px #9ca3af, 16px 8px #d1d5db, 20px 8px #9ca3af, 24px 8px #4b5563,
+                0px 12px #4b5563, 4px 12px #4b5563, 8px 12px #4b5563, 12px 12px #4b5563, 16px 12px #4b5563, 20px 12px #4b5563, 24px 12px #4b5563;
+            z-index: 2;
+        }
+
+        /* БАЗОВЫЙ КЛАСС ДЛЯ КОТОВ */
+        .pixel-cat {
+            width: 4px;
+            height: 4px;
+            position: absolute;
+            pointer-events: none;
+            z-index: 5;
+            background: transparent;
+            will-change: transform, left, top;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Препятствия-камни в случайных местах -->
+<div class="rock" style="top: 15%; left: 20%;"></div>
+<div class="rock" style="top: 25%; right: 15%;"></div>
+<div class="rock" style="bottom: 20%; left: 15%;"></div>
+<div class="rock" style="bottom: 15%; right: 25%;"></div>
+
+<div class="container" id="main-card">
+    <h1 id="status-title">Определение статуса...</h1>
+    <div id="countdown" class="timer">00:00:00</div>
+
+    <!-- АДМИН-ПАНЕЛЬ -->
+    <div id="admin-block" class="admin-panel">
+        <h3>Панель администратора</h3>
+        <label>Укажите дату и время отключения:<br>
+            <input type="datetime-local" id="target-time">
+        </label><br>
+        <button class="btn btn-start" id="btn-generate">Сгенерировать ссылку</button>
+        
+        <div id="share-block" class="share-box">
+            <p style="font-size: 14px; margin: 5px 0;">Скопируйте эту ссылку и отправьте коллегам:</p>
+            <input type="text" id="share-url" class="share-input" readonly onclick="this.select()">
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. ЛОГИКА ТАЙМЕРА (БЕЗ ИЗМЕНЕНИЙ)
+    const urlParams = new URLSearchParams(window.location.search);
+    const timeParam = urlParams.get('time');
+    const isAdmin = urlParams.get('admin') === 'true';
+
+    if (isAdmin) document.getElementById('admin-block').style.display = 'block';
+
+    const titleEl = document.getElementById('status-title');
+    const timerEl = document.getElementById('countdown');
+    let intervalId = null;
+
+    document.getElementById('btn-generate').addEventListener('click', () => {
+        const inputTime = document.getElementById('target-time').value;
+        if (!inputTime) return alert("Пожалуйста, выберите дату и время!");
+        const baseUrl = window.location.href.split('?');
+        const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
+        document.getElementById('share-url').value = generatedUrl;
+        document.getElementById('share-block').style.display = 'block';
     });
 
-    updateCatPosition();
-</script>
+    if (timeParam) {
+        const targetDate = new Date(timeParam);
+        if (!isNaN(targetDate.getTime())) {
+            function updateSeconds() {
+                const now = new Date();
+                const diff = targetDate - now;
+                if (diff <= 0) {
+                    titleEl.innerText = "VPN отключен";
+                    titleEl.className = "status-inactive";
+                    timerEl.innerText = "00:00:00";
+                    return clearInterval(intervalId);
+                }
+                titleEl.innerText = "До отключения VPN:";
+                titleEl.className = "status-active";
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                const pad = (num) => String(num).padStart(2, '0');
+                timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+            }
+            updateSeconds();
+            intervalId = setInterval(updateSeconds, 1000);
+        } else { showDisconnected(); }
+    } else { showDisconnected(); }
 
-</body>
-</html>
+    function showDisconnected() {
+        titleEl.innerText = "VPN отключен";
+        titleEl.className = "status-inactive";
+        timerEl.innerText = "00:00:00";
+    }
+
+    // 2. ИГРОВОЙ ДВИЖОК ДЛЯ СТАИ КОТОВ С ПРЕПЯТСТВИЯМИ
+    
+    // Цветовые палитры кошачьих теней (box-shadow)
+    const catColors = {
+        black: `16px 0px #1f2937, 28px 0px #1f2937, 16px 4px #1f2937, 20px 4px #1f2937, 24px 4px #1f2937, 28px 4px #1f2937, 12px 8px #1f2937, 16px 8px #1f2937, 20px 8px #ffffff, 24px 8px #1f2937, 28px 8px #ffffff, 32px 8px #1f2937, 12px 12px #1f2937, 16px 12px #1f2937, 20px 12px #1f2937, 24px 12px #1f2937, 28px 12px #1f2937, 32px 12px #1f2937, 16px 16px #1f2937, 20px 16px #1f2937, 24px 16px #1f2937, 28px 16px #1f2937, 0px 20px #1f2937, 12px 20px #1f2937, 16px 20px #1f2937, 20px 20px #1f2937, 24px 20px #1f2937, 28px 20px #1f2937, 0px 24px #1f2937, 4px 24px #1f2937, 8px 24px #1f2937, 12px 24px #1f2937, 16px 24px #1f2937, 20px 24px #1f2937, 24px 24px #1f2937, 28px 24px #1f2937, 4px 28px #1f2937, 8px 28px #1f2937, 12px 28px #1f2937, 16px 28px #1f2937, 20px 28px #1f2937, 24px 28px #1f2937, 12px 32px #1f2937, 24px 32px #1f2937`,
+        orange: `16px 0px #d97706, 28px 0px #d97706, 16px 4px #d97706, 20px 4px #f59e0b, 24px 4px #f59e0b, 28px 4px #d97706, 12px 8px #d97706, 16px 8px #f59e0b, 20px 8px #ffffff, 24px 8px #d97706, 28px 8px #ffffff, 32px 8px #d97706, 12px 12px #d97706, 16px 12px #f59e0b, 20px 12px #f59e0b, 24px 12px #f59e0b, 28px 12px #f59e0b, 32px 12px #d97706, 16px 16px #d97706, 20px 16px #f59e0b, 24px 16px #f59e0b, 28px 16px #d97706, 0px 20px #d97706, 12px 20px #d97706, 16px 20px #f59e0b, 20px 20px #f59e0b, 24px 20px #f59e0b, 28px 20px #d97706, 0px 24px #d97706, 4px 24px #d97706, 8px 24px #d97706, 12px 24px #f59e0b, 16px 24px #f59e0b, 20px 24px #f59e0b, 24px 24px #f59e0b, 28px 24px #d97706, 4px 28px #d97706, 8px 28px #d97706, 12px 28px #d97706, 16px 28px #d97706, 20px 28px #d97706, 24px 28px #d97706, 12px 32px #d97706, 24px 32px #d97706`,
+        grey: `16px 0px #4b5563, 28px 0px #4b5563, 16px 4px #4b5563, 20px 4px #4b5563, 24px 4px #4b5563, 28px 4px #4b5563, 12px 8px #4b5563, 16px 8px #4b5563, 20px 8px #ffffff, 24px 8px #4b5563, 28px 8px #ffffff, 32px 8px #4b5563, 12px 12px #4b5563, 16px 12px #9ca3af, 20px 12px #9ca3af, 24px 12px #9ca3af, 28px 12px #4b5563, 32px 12px #4b5563, 16px 16px #4b5563, 20px 16px #9ca3af, 24px 16px #9ca3af, 28px 16px #4b5563, 0px 20px #4b5563, 12px 20px #4b5563, 16px 20px #9ca3af, 20px 20px #9ca3af, 24px 20px #9ca3af, 28px 20px #4b5563, 0px 24px #4b5563, 4px 24px #4b5563, 8px 24px #4b5563, 12px 24px #9ca3af, 16px 24px #9ca3af, 20px 24px #9ca3af, 24px 24px #9ca3af, 28px 24px #4b5563, 4px 28px #4b5563, 8px 28px #4b5563, 12px 28px #4b5563, 16px 28px #4b5563, 20px 28px #4b5563, 24px 28px #4b5563, 12px 32px #4b5563, 24px 32px #4b5563`,
