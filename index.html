@@ -17,7 +17,7 @@
             position: relative;
         }
 
-        /* 8-битная текстура травы */
+        /* Текстура травы */
         body::before {
             content: "";
             position: absolute;
@@ -30,7 +30,7 @@
             z-index: 1;
         }
 
-        /* Ретро-карточка таймера */
+        /* Карточка таймера */
         .container {
             text-align: center;
             background: white;
@@ -73,298 +73,61 @@
             box-shadow: 4px 4px 0px #1f2937;
             text-transform: uppercase;
         }
-        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #1f2937; }
         .btn-start { background-color: #2563eb; color: white; }
         .share-box { margin-top: 15px; display: none; }
         .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
 
-        /* Олдскульные серые камни */
-        .rock {
-            position: absolute;
-            width: 48px;
-            height: 36px;
-            background-color: #4b5563;
-            border: 4px solid #1f2937;
-            box-shadow: inset -4px -4px 0px #374151, inset 4px 4px 0px #9ca3af;
-            z-index: 2;
-        }
-
-        /* ИНТЕРАКТИВНЫЕ КОТЫ */
-        .pixel-cat {
-            position: absolute;
-            width: 48px;
-            height: 36px;
-            z-index: 5;
-            will-change: left, top;
-            image-rendering: pixelated; /* Сохраняет четкость пикселей */
-        }
-        .pixel-cat svg {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-</head>
-<body>
-
-<!-- Камни-препятствия -->
-<div class="rock" style="top: 12%; left: 15%;"></div>
-<div class="rock" style="top: 25%; right: 12%;"></div>
-<div class="rock" style="bottom: 15%; left: 10%;"></div>
-<div class="rock" style="bottom: 22%; right: 20%;"></div>
-
-<div class="container" id="main-card">
-    <h1 id="status-title">СТАТУС VPN</h1>
-    <div id="countdown" class="timer">00:00:00</div>
-
-    <!-- АДМИН-ПАНЕЛЬ -->
-    <div id="admin-block" class="admin-panel">
-        <h3>УПРАВЛЕНИЕ ТАЙМЕРОМ</h3>
-        <label>Укажите дату и время отключения:<br>
-            <input type="datetime-local" id="target-time">
-        </label><br>
-        <button class="btn btn-start" id="btn-generate">СОЗДАТЬ ССЫЛКУ</button>
-        
-        <div id="share-block" class="share-box">
-            <p style="font-size: 14px; margin: 5px 0;">Передайте ссылку сотрудникам:</p>
-            <input type="text" id="share-url" class="share-input" readonly onclick="this.select()">
-        </div>
-    </div>
-</div>
-
-<script>
-    // 1. ЛОГИКА ТАЙМЕРА
-    const urlParams = new URLSearchParams(window.location.search);
-    const timeParam = urlParams.get('time');
-    const isAdmin = urlParams.get('admin') === 'true';
-
-    if (isAdmin) document.getElementById('admin-block').style.display = 'block';
-
-    const titleEl = document.getElementById('status-title');
-    const timerEl = document.getElementById('countdown');
-    let timerIntervalId = null;
-
-    document.getElementById('btn-generate').addEventListener('click', () => {
-        const inputTime = document.getElementById('target-time').value;
-        if (!inputTime) return alert("Выберите дату и время!");
-        const baseUrl = window.location.href.split('?');
-        const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
-        document.getElementById('share-url').value = generatedUrl;
-        document.getElementById('share-block').style.display = 'block';
-    });
-
-    function updateSeconds(targetDate) {
-        const now = new Date();
-        const diff = targetDate - now;
-        if (diff <= 0) {
-            titleEl.innerText = "VPN ОТКЛЮЧЕН";
-            titleEl.className = "status-inactive";
-            timerEl.innerText = "00:00:00";
-            if (timerIntervalId) clearInterval(timerIntervalId);
-            return;
-        }
-        titleEl.innerText = "ДО ОТКЛЮЧЕНИЯ VPN:";
-        titleEl.className = "status-active";
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        const pad = (num) => String(num).padStart(2, '0');
-        timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    }
-
-    if (timeParam) {
-        const targetDate = new Date(timeParam);
-        if (!isNaN(targetDate.getTime())) {
-            updateSeconds(targetDate);
-            timerIntervalId = setInterval(() => updateSeconds(targetDate), 1000);
-        } else { showDisconnected(); }
-    } else { showDisconnected(); }
-
-    function showDisconnected() {
-        titleEl.innerText = "VPN ОТКЛЮЧЕН";
-        titleEl.className = "status-inactive";
-        timerEl.innerText = "00:00:00";
-    }
-
-    // 2. ДВИЖОК ДЛЯ СТАИ ДЕТАЛЬНЫХ SVG-КОТОВ
-    const mainCard = document.getElementById('main-card');
-    const rocks = document.querySelectorAll('.rock');
-    const cats = [];
-    const numCats = 4;
-
-    // Цвета для разных пород котов (тело, глаза)
-    const catBreeds = [
-        { body: '#1f2937', eye: '#f6e05e' }, // Черный с желтыми глазами
-        { body: '#ed8936', eye: '#ffffff' }, // Рыжий с белыми глазами
-        { body: '#718096', eye: '#fc8181' }, // Серый с розовыми глазами
-        { body: '#f7fafc', eye: '#63b3ed' }  // Белый с голубыми глазами
-    ];
-
-    // Шаблон создания пиксельного кота через векторный код (SVG)
-    function createCatSVG(bodyColor, eyeColor, legPhase) {
-        // Меняем положение лапок в зависимости от фазы анимации
-        const legY1 = legPhase === 0 ? 28 : 30;
-        const legY2 = legPhase === 0 ? 30 : 28;
-
-        return `
-        <svg viewBox="0 0 48 36" xmlns="http://w3.org">
-            <!-- Хвост -->
-            <rect x="2" y="12" width="6" height="12" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="8" y="16" width="6" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Туловище -->
-            <rect x="12" y="16" width="22" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Голова -->
-            <rect x="30" y="6" width="14" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Ушки -->
-            <polygon points="32,6 36,0 36,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <polygon points="40,6 44,0 44,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Глаза -->
-            <rect x="38" y="10" width="4" height="4" fill="${eyeColor}"/>
-            <rect x="40" y="10" width="2" height="4" fill="#000"/> <!-- Зрачок -->
-            <!-- Мордочка/Носик -->
-            <rect x="44" y="14" width="2" height="2" fill="#fc8181"/>
-            <!-- Усы -->
-            <line x1="44" y1="16" x2="48" y2="15" stroke="#1f2937" stroke-width="1.5"/>
-            <line x1="44" y1="17" x2="48" y2="18" stroke="#1f2937" stroke-width="1.5"/>
-            <!-- Передние и задние лапки (анимированные) -->
-            <rect x="14" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="20" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="26" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="30" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-        </svg>`;
-    }
-
-    // Спавн стаи котов на лужайке
-    for (let i = 0; i < numCats; i++) {
-        const catEl = document.createElement('div');
-        catEl.className = 'pixel-cat';
-        document.body.appendChild(catEl);
-
-        const breed = catBreeds[i % catBreeds.length];
-
-        cats.push({
-            element: catEl,
-            bodyColor: breed.body,
-            eyeColor: breed.eye,
-            x: Math.random() * (window.innerWidth - 120) + 40,
-            y: Math.random() * (window.innerHeight - 120) + 40,
-            vx: (Math.random() > 0.5 ? 2 : -2),
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статус VPN</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #2ed573; /* Зеленая поляна */
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* 8-битная текстура травы */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
-                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
-            background-size: 32px 32px;
-            opacity: 0.25;
-            z-index: 1;
-        }
-
-        /* Ретро-карточка таймера */
-        .container {
-            text-align: center;
-            background: white;
-            padding: 40px;
-            border-radius: 4px;
-            box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 420px;
-            position: relative;
-            z-index: 10;
-            border: 6px solid #1f2937;
-        }
-
-        h1 { font-size: 24px; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; color: #1f2937; }
-        .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
-        .status-active { color: #dc2626; }
-        .status-inactive { color: #10b981; }
-        
-        .admin-panel {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 4px dashed #1f2937;
+        /* Красный блок для вывода системных ошибок, если они будут */
+        .debug-error {
+            color: #b91c1c;
+            background: #fee2e2;
+            padding: 10px;
+            border: 2px solid #b91c1c;
+            margin-top: 15px;
+            font-size: 13px;
             display: none;
-            background: #f3f4f6;
-            padding: 15px;
-        }
-        .admin-panel input {
-            padding: 8px;
-            margin: 10px 0;
-            border: 3px solid #1f2937;
-            font-size: 14px;
-            width: 80%;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: 3px solid #1f2937;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 5px;
-            box-shadow: 4px 4px 0px #1f2937;
-            text-transform: uppercase;
-        }
-        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #1f2937; }
-        .btn-start { background-color: #2563eb; color: white; }
-        .share-box { margin-top: 15px; display: none; }
-        .share-input { width: 90%; padding: 8px; font-size: 12px; text-align: center; border: 2px solid #1f2937; }
-
-        /* Олдскульные серые камни */
-        .rock {
-            position: absolute;
-            width: 48px;
-            height: 36px;
-            background-color: #4b5563;
-            border: 4px solid #1f2937;
-            box-shadow: inset -4px -4px 0px #374151, inset 4px 4px 0px #9ca3af;
-            z-index: 2;
+            border-radius: 4px;
         }
 
-        /* ИНТЕРАКТИВНЫЕ КОТЫ */
+        /* 👾 ДЕТАЛЬНЫЙ ПИКСЕЛЬНЫЙ КOT НА CSS БЛОКАХ */
         .pixel-cat {
             position: absolute;
-            width: 48px;
-            height: 36px;
+            width: 44px;
+            height: 34px;
             z-index: 5;
             will-change: left, top;
-            image-rendering: pixelated; /* Сохраняет четкость пикселей */
         }
-        .pixel-cat svg {
+
+        /* Рисуем кота: уши, глаза со зрачками, усы, лапы и хвост */
+        .cat-body {
             width: 100%;
             height: 100%;
+            position: relative;
         }
+        .cat-back { position: absolute; top: 10px; left: 10px; width: 24px; height: 16px; border: 3px solid #1f2937; border-radius: 3px; }
+        .cat-head { position: absolute; top: 2px; left: 24px; width: 16px; height: 14px; border: 3px solid #1f2937; border-radius: 2px; }
+        .cat-ear1 { position: absolute; top: -6px; left: 26px; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-bottom: 6px solid #1f2937; }
+        .cat-ear2 { position: absolute; top: -6px; left: 34px; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-bottom: 6px solid #1f2937; }
+        .cat-eye1 { position: absolute; top: 5px; left: 29px; width: 3px; height: 4px; background: white; border-radius: 1px; }
+        .cat-eye1::after { content: ""; position: absolute; width: 1px; height: 4px; background: black; left: 1px; }
+        .cat-eye2 { position: absolute; top: 5px; left: 35px; width: 3px; height: 4px; background: white; border-radius: 1px; }
+        .cat-eye2::after { content: ""; position: absolute; width: 1px; height: 4px; background: black; left: 1px; }
+        .cat-tail { position: absolute; top: 2px; left: 4px; width: 8px; height: 12px; border-left: 3px solid #1f2937; border-top: 3px solid #1f2937; border-radius: 4px 0 0 0; }
+        
+        /* Лапки кота */
+        .cat-leg { position: absolute; bottom: 2px; width: 3px; height: 7px; background: #1f2937; }
+        .leg-1 { left: 12px; }
+        .leg-2 { left: 18px; }
+        .leg-3 { left: 26px; }
+        .leg-4 { left: 32px; }
     </style>
 </head>
 <body>
 
-<!-- Камни-препятствия -->
-<div class="rock" style="top: 12%; left: 15%;"></div>
-<div class="rock" style="top: 25%; right: 12%;"></div>
-<div class="rock" style="bottom: 15%; left: 10%;"></div>
-<div class="rock" style="bottom: 22%; right: 20%;"></div>
-
 <div class="container" id="main-card">
     <h1 id="status-title">СТАТУС VPN</h1>
     <div id="countdown" class="timer">00:00:00</div>
+    <div id="error-box" class="debug-error"></div>
 
     <!-- АДМИН-ПАНЕЛЬ -->
     <div id="admin-block" class="admin-panel">
@@ -382,119 +145,113 @@
 </div>
 
 <script>
-    // 1. ЛОГИКА ТАЙМЕРА
-    const urlParams = new URLSearchParams(window.location.search);
-    const timeParam = urlParams.get('time');
-    const isAdmin = urlParams.get('admin') === 'true';
+    // Блок отладки ошибок
+    function showError(text) {
+        var box = document.getElementById('error-box');
+        box.innerText = "Ошибка скрипта: " + text;
+        box.style.display = "block";
+    }
 
-    if (isAdmin) document.getElementById('admin-block').style.display = 'block';
+    try {
+        // 1. ЛОГИКА ТАЙМЕРА
+        var urlParams = new URLSearchParams(window.location.search);
+        var timeParam = urlParams.get('time');
+        var isAdmin = urlParams.get('admin') === 'true';
 
-    const titleEl = document.getElementById('status-title');
-    const timerEl = document.getElementById('countdown');
-    let timerIntervalId = null;
+        if (isAdmin) {
+            document.getElementById('admin-block').style.display = 'block';
+        }
 
-    document.getElementById('btn-generate').addEventListener('click', () => {
-        const inputTime = document.getElementById('target-time').value;
-        if (!inputTime) return alert("Выберите дату и время!");
-        const baseUrl = window.location.href.split('?');
-        const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
-        document.getElementById('share-url').value = generatedUrl;
-        document.getElementById('share-block').style.display = 'block';
-    });
+        var titleEl = document.getElementById('status-title');
+        var timerEl = document.getElementById('countdown');
+        var timerIntervalId = null;
 
-    function updateSeconds(targetDate) {
-        const now = new Date();
-        const diff = targetDate - now;
-        if (diff <= 0) {
+        document.getElementById('btn-generate').addEventListener('click', function() {
+            var inputTime = document.getElementById('target-time').value;
+            if (!inputTime) return alert("Выберите дату и время!");
+            var baseUrl = window.location.href.split('?');
+            var generatedUrl = baseUrl[0] + "?time=" + encodeURIComponent(inputTime);
+            document.getElementById('share-url').value = generatedUrl;
+            document.getElementById('share-block').style.display = 'block';
+        });
+
+        function updateSeconds(targetDate) {
+            var now = new Date();
+            var diff = targetDate - now;
+            if (diff <= 0) {
+                titleEl.innerText = "VPN ОТКЛЮЧЕН";
+                titleEl.className = "status-inactive";
+                timerEl.innerText = "00:00:00";
+                if (timerIntervalId) clearInterval(timerIntervalId);
+                return;
+            }
+            titleEl.innerText = "ДО ОТКЛЮЧЕНИЯ VPN:";
+            titleEl.className = "status-active";
+            var hours = Math.floor(diff / (1000 * 60 * 60));
+            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            var pad = function(num) { return String(num).padStart(2, '0'); };
+            timerEl.innerText = pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+        }
+
+        if (timeParam) {
+            var targetDate = new Date(timeParam);
+            if (!isNaN(targetDate.getTime())) {
+                updateSeconds(targetDate);
+                timerIntervalId = setInterval(function() { updateSeconds(targetDate); }, 1000);
+            } else { showDisconnected(); }
+        } else { showDisconnected(); }
+
+        function showDisconnected() {
             titleEl.innerText = "VPN ОТКЛЮЧЕН";
             titleEl.className = "status-inactive";
             timerEl.innerText = "00:00:00";
-            if (timerIntervalId) clearInterval(timerIntervalId);
-            return;
         }
-        titleEl.innerText = "ДО ОТКЛЮЧЕНИЯ VPN:";
-        titleEl.className = "status-active";
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        const pad = (num) => String(num).padStart(2, '0');
-        timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    }
 
-    if (timeParam) {
-        const targetDate = new Date(timeParam);
-        if (!isNaN(targetDate.getTime())) {
-            updateSeconds(targetDate);
-            timerIntervalId = setInterval(() => updateSeconds(targetDate), 1000);
-        } else { showDisconnected(); }
-    } else { showDisconnected(); }
+        // 2. БЕЗОПАСНЫЙ ДВИЖОК СТАИ КОТОВ
+        var cats = [];
+        var numCats = 4;
+        var colors = ['#1f2937', '#ed8936', '#718096', '#f7fafc']; // Окрасы котов
 
-    function showDisconnected() {
-        titleEl.innerText = "VPN ОТКЛЮЧЕН";
-        titleEl.className = "status-inactive";
-        timerEl.innerText = "00:00:00";
-    }
+        for (var i = 0; i < numCats; i++) {
+            var catEl = document.createElement('div');
+            catEl.className = 'pixel-cat';
+            
+            // Собираем детальную HTML модель кота из кубиков
+            catEl.innerHTML = 
+                '<div class="cat-body">' +
+                    '<div class="cat-ear1"></div><div class="cat-ear2"></div>' +
+                    '<div class="cat-tail"></div>' +
+                    '<div class="cat-back" style="background:' + colors[i] + '"></div>' +
+                    '<div class="cat-head" style="background:' + colors[i] + '"></div>' +
+                    '<div class="cat-eye1"></div><div class="cat-eye2"></div>' +
+                    '<div class="cat-leg leg-1"></div><div class="cat-leg leg-2"></div>' +
+                    '<div class="cat-leg leg-3"></div><div class="cat-leg leg-4"></div>' +
+                '</div>';
+                
+            document.body.appendChild(catEl);
 
-    // 2. ДВИЖОК ДЛЯ СТАИ ДЕТАЛЬНЫХ SVG-КОТОВ
-    const mainCard = document.getElementById('main-card');
-    const rocks = document.querySelectorAll('.rock');
-    const cats = [];
-    const numCats = 4;
-
-    // Цвета для разных пород котов (тело, глаза)
-    const catBreeds = [
-        { body: '#1f2937', eye: '#f6e05e' }, // Черный с желтыми глазами
-        { body: '#ed8936', eye: '#ffffff' }, // Рыжий с белыми глазами
-        { body: '#718096', eye: '#fc8181' }, // Серый с розовыми глазами
-        { body: '#f7fafc', eye: '#63b3ed' }  // Белый с голубыми глазами
-    ];
-
-    // Шаблон создания пиксельного кота через векторный код (SVG)
-    function createCatSVG(bodyColor, eyeColor, legPhase) {
-        // Меняем положение лапок в зависимости от фазы анимации
-        const legY1 = legPhase === 0 ? 28 : 30;
-        const legY2 = legPhase === 0 ? 30 : 28;
-
-        return `
-        <svg viewBox="0 0 48 36" xmlns="http://w3.org">
-            <!-- Хвост -->
-            <rect x="2" y="12" width="6" height="12" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="8" y="16" width="6" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Туловище -->
-            <rect x="12" y="16" width="22" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Голова -->
-            <rect x="30" y="6" width="14" height="14" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Ушки -->
-            <polygon points="32,6 36,0 36,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <polygon points="40,6 44,0 44,6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <!-- Глаза -->
-            <rect x="38" y="10" width="4" height="4" fill="${eyeColor}"/>
-            <rect x="40" y="10" width="2" height="4" fill="#000"/> <!-- Зрачок -->
-            <!-- Мордочка/Носик -->
-            <rect x="44" y="14" width="2" height="2" fill="#fc8181"/>
-            <!-- Усы -->
-            <line x1="44" y1="16" x2="48" y2="15" stroke="#1f2937" stroke-width="1.5"/>
-            <line x1="44" y1="17" x2="48" y2="18" stroke="#1f2937" stroke-width="1.5"/>
-            <!-- Передние и задние лапки (анимированные) -->
-            <rect x="14" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="20" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="26" y="${legY1}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-            <rect x="30" y="${legY2}" width="4" height="6" fill="${bodyColor}" stroke="#1f2937" stroke-width="2"/>
-        </svg>`;
-    }
-
-    // Спавн стаи котов на лужайке
-    for (let i = 0; i < numCats; i++) {
-        const catEl = document.createElement('div');
-        catEl.className = 'pixel-cat';
-        document.body.appendChild(catEl);
-
-        const breed = catBreeds[i % catBreeds.length];
-
-        cats.push({
-            element: catEl,
-            bodyColor: breed.body,
-            eyeColor: breed.eye,
-            x: Math.random() * (window.innerWidth - 120) + 40,
-            y: Math.random() * (window.innerHeight - 120) + 40,
-            vx: (Math.random() > 0.5 ? 2 : -2),
+            cats.push({
+                element: catEl,
+                x: Math.random() * (window.innerWidth - 100) + 30,
+                y: Math.random() * (window.innerHeight - 100) + 30,
+                vx: (Math.random() > 0.5 ? 2 : -2),
+                vy: (Math.random() > 0.5 ? 1.5 : -1.5),
+                speed: 1,
+                width: 44,
+                height: 34
+});}// Цикл движения (25 кадров в секунду)
+setInterval(function() {cats.forEach(function(cat) {var nextX = cat.x + cat.vx * cat.speed;var nextY = cat.y + cat.vy * cat.speed;
+// Границы экрана
+if (nextX < 0 || nextX > window.innerWidth - cat.width) { cat.vx *= -1; nextX = cat.x; }if (nextY < 0 || nextY > window.innerHeight - cat.height) { cat.vy *= -1; nextY = cat.y; }cat.x = nextX;cat.y = nextY;
+// Перенос на экран
+cat.element.style.left = cat.x + 'px';cat.element.style.top = cat.y + 'px';
+// Поворот кота по направлению бега
+cat.element.style.transform = cat.vx > 0 ? 'scaleX(1)' : 'scaleX(-1)';
+// Замедление после испуга мышки
+if (cat.speed > 1) cat.speed -= 0.05;});}, 40);
+// Интерактив: реакция на мышку
+document.addEventListener('mousemove', function(e) {cats.forEach(function(cat) {var centerX = cat.x + cat.width / 2;var centerY = cat.y + cat.height / 2;var diffX = e.clientX - centerX;var diffY = e.clientY - centerY;var distance = Math.sqrt(diffX * diffX + diffY * diffY);if (distance < 130) {cat.speed = 4; 
+// Ускорение бега
+cat.vx = diffX > 0 ? -2 : 2;cat.vy = diffY > 0 ? -1.5 : 1.5;}});});} catch (err) {showError(err.message);}
