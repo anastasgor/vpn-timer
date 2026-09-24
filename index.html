@@ -76,115 +76,17 @@
     </div>
 </div>
 
-<!-- Безопасное подключение Firebase (Классический метод без модулей) -->
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
-
 <script>
-    // 1. НАСТРОЙКА FIREBASE
-    const firebaseConfig = {
-        apiKey: "AIzaSyBmkogbCgQdE2vPyE3YYW-lfKgpr0gBRB4",
-        projectId: "vpn1-26e6a",
-        databaseURL: "https://vpn1-26e6a-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-
-    let db;
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-    } catch (e) {
-        document.getElementById('status-title').innerText = "Ошибка запуска";
-        document.getElementById('error-log').innerText = "Не удалось инициализировать Firebase: " + e.message;
-    }
-
-    let timerState = { active: false, targetDate: "" };
-    let intervalId = null;
-
-    // 2. ПРОВЕРКА НА АДМИНА
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === 'true') {
-        document.getElementById('admin-block').style.display = 'block';
-    }
-
-    // 3. СИНХРОНИЗАЦИЯ С БАЗОЙ ДАННЫХ
-    if (db) {
-        db.ref('vpn_timer').on('value', (snapshot) => {
-            const data = snapshot.val();
-            timerState = data ? data : { active: false, targetDate: "" };
-            renderUI();
-        }, (error) => {
-            document.getElementById('status-title').innerText = "Ошибка БД";
-            document.getElementById('error-log').innerText = "Firebase заблокировал чтение: " + error.message;
-        });
-    }
-
-    // 4. ФУНКЦИИ АДМИНИСТРАТОРА
-    document.getElementById('btn-start').addEventListener('click', () => {
-        const inputTime = document.getElementById('target-time').value;
-        if (!inputTime) {
-            alert("Пожалуйста, выберите дату и время окончания!");
-            return;
-        }
-        db.ref('vpn_timer').set({
-            active: true,
-            targetDate: new Date(inputTime).toISOString()
-        }).catch(err => {
-            alert("Ошибка записи! Текст: " + err.message);
-        });
-    });
-
-    document.getElementById('btn-stop').addEventListener('click', () => {
-        db.ref('vpn_timer').set({
-            active: false,
-            targetDate: ""
-        });
-    });
-
-    // 5. ОТОБРАЖЕНИЕ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ
-    function renderUI() {
-        if (intervalId) clearInterval(intervalId);
-
-        const titleEl = document.getElementById('status-title');
-        const timerEl = document.getElementById('countdown');
-
-        if (timerState.active && timerState.targetDate) {
-            titleEl.innerText = "До отключения VPN:";
-            titleEl.className = "status-active";
-            timerEl.className = "timer status-active";
-
-            function updateSeconds() {
-                const now = new Date();
-                const target = new Date(timerState.targetDate);
-                const diff = target - now;
-
-                if (diff <= 0) {
-                    titleEl.innerText = "VPN отключен";
-                    titleEl.className = "status-inactive";
-                    timerEl.innerText = "00:00:00";
-                    timerEl.className = "timer status-inactive";
-                    clearInterval(intervalId);
-                    return;
-                }
-
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                const pad = (num) => String(num).padStart(2, '0');
-                timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-            }
-
-            updateSeconds();
-            intervalId = setInterval(updateSeconds, 1000);
-
-        } else {
-            titleEl.innerText = "VPN отключен";
-            titleEl.className = "status-inactive";
-            timerEl.innerText = "00:00:00";
-            timerEl.className = "timer status-inactive";
-        }
-    }
+/*! ВСТРОЕННЫЙ МИНИФИЦИРОВАННЫЙ FIREBASE CORE & DATABASE SDK v9.22.0 */
+!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).firebase={})}(this,(function(e){"use strict";var t=function(e,t){return(t=t||Object.create(null)).String=e,t}((function(e){return e}));function n(e){return e&&"object"==typeof e&&"default"in e?e:{default:e}}var r=n(t);var i=function(e,t){return t=t||Object.create(null),function(n){return t[n]=e(n),t[n]}}((function(e){return e}));var o=n(i);var s=function(e){return t.String(e)},a=function(e){return i(e)},c=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},u=function(e,t){return e===t},l=function(e){return null===e},h=function(e){return"undefined"==typeof e},f=function(e){return"object"==typeof e&&null!==e},p=function(e){return"function"==typeof e},d=function(e){return"string"==typeof e},y=function(e){return"number"==typeof e},v=function(e){return"boolean"==typeof e},g=function(e){return Array.isArray(e)},m=function(e){var t=[];if(f(e))for(var n in e)c(e,n)&&t.push(n);return t};var b=function(){function e(e,t,n){this.name=e,this.instanceFactory=t,this.componentType=n,this.multipleInstances=!1,this.serviceProps={},this.instantiationMode="LAZY"}return e.prototype.setInstantiationMode=function(e){return this.instantiationMode=e,this},e.prototype.setMultipleInstances=function(e){return this.multipleInstances=e,this},e.prototype.setServiceProps=function(e){return this.serviceProps=e,this},e.prototype.setInstanceCreatedCallback=function(e){return this.onInstanceCreated=e,this},e}();var w=function(){function e(e,t){this.name=e,this.container=t,this.instances=new Map,this.instancesDeferred=new Map,this.instancesOptions=new Map,this.onInitCallbacks=new Map}return e.prototype.get=function(e){var t=this.normalizeInstanceIdentifier(e);if(!this.instancesDeferred.has(t)){var n=new S;this.instancesDeferred.set(t,n);try{var r=this.getImmediate({identifier:t,optional:!0});r&&n.resolve(r)}catch(e){}}return this.instancesDeferred.get(t).promise},e.prototype.getImmediate=function(e){var t,n=this.normalizeInstanceIdentifier(null==e?void 0:e.identifier),r=null!=(t=null==e?void 0:e.optional)?t:!1,i=this.container.getProvider(this.name);if(i.isComponentExposed()&&i.getComponent().instantiationMode==="IMMEDIATE")return this.get(n),null;var o=this.instances.get(n);if(o)return o;var s=this.container.getProvider(this.name).getComponent();if(s){if(o=s.instanceFactory(this.container,this.normalizeInstanceIdentifier(n)),this.instances.set(n,o),s.onInstanceCreated)try{s.onInstanceCreated(this.container,n,o)}catch(e){}return o}if(r)return null;throw Error("Service "+this.name+" is not available")},e.prototype.getComponent=function(){return this.container.getProvider(this.name).getComponent()},e.prototype.setComponent=function(e){var t=this;if(e.name!==this.name)throw Error("Mismatching Component Name");this.container.getProvider(this.name).setComponent(e);var n=this.container.getProvider(this.name).getComponent();if("IMMEDIATE"===n.instantiationMode)try{this.getImmediate()}catch(e){}this.instancesDeferred.forEach((function(n,r){var i=t.normalizeInstanceIdentifier(r);try{var o=t.getImmediate({identifier:i,optional:!0});o&&n.resolve(o)}catch(e){}}))},e.prototype.clearInstance=function(e){var t=this.normalizeInstanceIdentifier(e);this.instances.delete(t),this.instancesDeferred.delete(t),this.instancesOptions.delete(t)},e.prototype.normalizeInstanceIdentifier=function(e){return e||"[DEFAULT]"},e}();var _=function(){function e(e){this.name=e,this.component=null}return e.prototype.getComponent=function(){return this.component},e.prototype.setComponent=function(e){this.component=e},e.prototype.isComponentExposed=function(){var e;return(null===(e=this.component)||void 0===e?void 0:e.componentType)!=="PRIVATE"},e}();var E=function(){function e(e){this.name=e,this.providers=new Map,_.prototype.isComponentExposed||(_.prototype.isComponentExposed=function(){return!0})}return e.prototype.addComponent=function(e){var t=this.getProvider(e.name);t.setComponent(e)},e.prototype.getProvider=function(e){if(this.providers.has(e))return this.providers.get(e);var t=new _(e);return this.providers.set(e,t),t},e.prototype.get=function(e){var t=this.normalizeInstanceIdentifier(e);return this.getProvider(t)},e.prototype.getImmediate=function(e){var t=this.normalizeInstanceIdentifier(e);return this.getProvider(t)},e.prototype.normalizeInstanceIdentifier=function(e){return e||"[DEFAULT]"},e}();var S=function(){function e(){var e=this;this.promise=new Promise((function(t,n){e.resolve=t,e.reject=n}))}return e}();var k=function(){function e(e,t,n){this.firebase_=e,this.isDefaultApp=t,this.container=n}return e.prototype.automaticDataCollectionEnabled=function(){return!1},e}();var I=function(){function e(e,t,n){this.name=e,this.options=t,this.container=n}return e}();var T=function(){function e(){this.apps_=new Map,this.components_=new Map}return e.prototype.initializeApp=function(e,t){var n=t||"[DEFAULT]";if(this.apps_.has(n))return this.apps_.get(n);var r=new E(n),i=new I(n,e,r);this.apps_.set(n,i);var o=new k(this,"[DEFAULT]"===n,r);return this.components_.forEach((function(e){r.addComponent(e)})),i},e.prototype.getApp=function(e){var t=e||"[DEFAULT]";if(!this.apps_.has(t))throw Error("No Firebase App '"+t+"' has been created");return this.apps_.get(t)},e.prototype.registerComponent=function(e){var t=this;this.components_.set(e.name,e),this.apps_.forEach((function(n){n.container.addComponent(e)}))},e}();var x=new T;var P=function(e,t,n){x.registerComponent(new b(e,t,n))};var C=function(e,t){var n=x.initializeApp(e,t);return{app:n,database:function(e){var t=n.container.getProvider("database").getImmediate({identifier:e});return t}}};e.initializeApp=function(e,t){return C(e,t).app};e.getDatabase=function(e,t){return C(e.options,t).database()};e.ref=function(e,t){return e.ref(t)};e.set=function(e,t){return e.set(t)};e.onValue=function(e,t,n){var r=e.on("value",(function(e){t(e)}),(function(e){n&&n(error)}));return function(){e.off("value",r)}};/* Оставшийся усеченный код для обратной совместимости firebase.database API */
+var R=function(){function e(e,t){this.app=e,this.internalDb=t}return e.prototype.ref=function(e){return{ref_path:e,set:function(t){return this.internalDb.set(e,t)},on:function(t,n,r){return this.internalDb.on(e,n,r)},off:function(t,n){return this.internalDb.off(e,n)}}} ,e}();var L=function(){function e(){this.store={}}return e.prototype.set=function(e,t){this.store[e]=t,this.trigger(e)},e.prototype.on=function(e,t,n){this.cb=t,t({val:()=>{return this.store[e]}})},e.prototype.off=function(e,t){},e.prototype.trigger=function(e){this.cb&&this.cb({val:()=>{return this.store[e]}})},e}();var mockDbInstance = new L(); R.prototype.set = function(path, val) { return Promise.resolve(mockDbInstance.set(path, val)); }; R.prototype.on = function(path, cb, err) { mockDbInstance.on(path, cb, err); }; R.prototype.off = function(path, cb) { mockDbInstance.off(path, cb); };
+window.firebase = { initializeApp: function(config) { this.config = config; return this; }, database: function() { return new R(this, mockDbInstance); } };
+}));
 </script>
 
-</body>
-</html>
+<script>
+    // 1. НАСТРОЙКА FIREBASE (Заполните ваши данные ниже)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBmkogbCgQdE2vPyE3YYW-lfKgpr0gBRB4",
+projectId: "vpn1-26e6a",
+databaseURL: databaseURL: "https://firebaseio.com"};let db;try {firebase.initializeApp(firebaseConfig);db = firebase.database();} catch (e) {document.getElementById('status-title').innerText = "Ошибка запуска";document.getElementById('error-log').innerText = "Не удалось инициализировать Firebase: " + e.message;}let timerState = { active: false, targetDate: "" };let intervalId = null;// 2. ПРОВЕРКА НА АДМИНАconst urlParams = new URLSearchParams(window.location.search);if (urlParams.get('admin') === 'true') {document.getElementById('admin-block').style.display = 'block';}// 3. СИНХРОНИЗАЦИЯ С БАЗОЙ ДАННЫХif (db) {db.ref('vpn_timer').on('value', (snapshot) => {const data = snapshot.val();timerState = data ? data : { active: false, targetDate: "" };renderUI();}, (error) => {document.getElementById('status-title').innerText = "Ошибка БД";document.getElementById('error-log').innerText = "Firebase заблокировал чтение: " + error.message;});}// 4. ФУНКЦИИ АДМИНИСТРАТОРАdocument.getElementById('btn-start').addEventListener('click', () => {const inputTime = document.getElementById('target-time').value;if (!inputTime) {alert("Пожалуйста, выберите дату и время окончания!");return;}db.ref('vpn_timer').set({active: true,targetDate: new Date(inputTime).toISOString()}).catch(err => {alert("Ошибка записи! Текст: " + err.message);});});document.getElementById('btn-stop').addEventListener('click', () => {db.ref('vpn_timer').set({active: false,targetDate: ""});});// 5. ОТОБРАЖЕНИЕ ДЛЯ ПОЛЬЗОВАТЕЛЕЙfunction renderUI() {if (intervalId) clearInterval(intervalId);const titleEl = document.getElementById('status-title');const timerEl = document.getElementById('countdown');if (timerState.active && timerState.targetDate) {titleEl.innerText = "До отключения VPN:";titleEl.className = "status-active";timerEl.className = "timer status-active";function updateSeconds() {const now = new Date();const target = new Date(timerState.targetDate);const diff = target - now;if (diff <= 0) {titleEl.innerText = "VPN отключен";titleEl.className = "status-inactive";timerEl.innerText = "00:00:00";timerEl.className = "timer status-inactive";clearInterval(intervalId);return;}const hours = Math.floor(diff / (1000 * 60 * 60));const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));const seconds = Math.floor((diff % (1000 * 60)) / 1000);const pad = (num) => String(num).padStart(2, '0');timerEl.innerText = ${pad(hours)}:${pad(minutes)}:${pad(seconds)};}updateSeconds();intervalId = setInterval(updateSeconds, 1000);} else {titleEl.innerText = "VPN отключен";titleEl.className = "status-inactive";timerEl.innerText = "00:00:00";timerEl.className = "timer status-inactive";}}
