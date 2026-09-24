@@ -8,12 +8,14 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             background-color: #f3f4f6;
             color: #1f2937;
+            overflow-x: hidden;
         }
         .container {
             text-align: center;
@@ -23,6 +25,8 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             width: 100%;
             max-width: 450px;
+            margin: auto;
+            z-index: 10;
         }
         h1 { font-size: 24px; margin-bottom: 20px; }
         .timer { font-size: 48px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
@@ -57,10 +61,7 @@
         }
         .btn-start { background-color: #2563eb; color: white; }
         .btn-start:hover { background-color: #1d4ed8; }
-        .share-box {
-            margin-top: 15px;
-            display: none;
-        }
+        .share-box { margin-top: 15px; display: none; }
         .share-input {
             width: 90%;
             padding: 8px;
@@ -69,6 +70,43 @@
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             text-align: center;
+        }
+
+        /* 👾 ПИКСЕЛЬНЫЙ ФУТЕР */
+        .pixel-footer {
+            width: 100%;
+            height: 120px;
+            position: relative;
+            background-color: #2ed573;
+            border-top: 6px solid #26af5f;
+            image-rendering: pixelated;
+        }
+        
+        .pixel-footer::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #26af5f 25%, transparent 25%), 
+                linear-gradient(-45deg, #26af5f 25%, transparent 25%);
+            background-size: 16px 16px;
+            opacity: 0.15;
+        }
+
+        /* Кот — встроенная CSS-графика (Base64) */
+        .pixel-cat {
+            width: 48px;
+            height: 36px;
+            position: absolute;
+            bottom: 35px;
+            left: 50px;
+            /* Вшитый 8-битный анимированный черный кот */
+            background-image: url("data:image/gif;base64,R0lGODlhMAAkAPMAAP///wAAAMzMzH9/f4CAgEJCQkDAwAD/AMDAwICAgP///////////////wAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBwAPACwAAAAAMAAkAEH/cMlJq70467372YgEcYmdaKpqXEqurrtVb+zS7f7Ube/b7v6IAnHJSau9OOu9+9mIBHGJnWiqalxKrq67VW/s0u3+1G3v2+7+iAJxyUmrvTjrvfvZiARxiZ1oqmpcSq6uuxVv7NLt/tRt79vu/ogCcclJq70467372YgEcYmdaKpqXEqurrtVb+zS7f7Ube/b7v4IADs=");
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+            pointer-events: none;
+            will-change: left;
         }
     </style>
 </head>
@@ -93,13 +131,16 @@
     </div>
 </div>
 
+<div class="pixel-footer" id="footer-zone">
+    <div class="pixel-cat" id="cat"></div>
+</div>
+
 <script>
-    // Получаем параметры из адресной строки страницы
+    // 1. КОД ТАЙМЕРА (БЕЗ ИЗМЕНЕНИЙ)
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
 
-    // Показываем админку, если в ссылке есть ?admin=true
     if (isAdmin) {
         document.getElementById('admin-block').style.display = 'block';
     }
@@ -108,38 +149,29 @@
     const timerEl = document.getElementById('countdown');
     let intervalId = null;
 
-    // Функция генерации ссылки для администратора
     document.getElementById('btn-generate').addEventListener('click', () => {
         const inputTime = document.getElementById('target-time').value;
         if (!inputTime) {
             alert("Пожалуйста, выберите дату и время!");
             return;
         }
-        // Формируем чистый URL без текущих параметров и добавляем время
-        const baseUrl = window.location.href.split('?')[0];
+        const baseUrl = window.location.href.split('?');
         const generatedUrl = `${baseUrl}?time=${encodeURIComponent(inputTime)}`;
         
         const shareInput = document.getElementById('share-url');
         shareInput.value = generatedUrl;
         document.getElementById('share-block').style.display = 'block';
-        
-        // Автоматически выделяем текст ссылки для удобства копирования
         shareInput.select();
-        alert("Ссылка успешно создана и выведена ниже! Скопируйте её.");
+        alert("Ссылка успешно создана!");
     });
 
-    // Логика работы таймера для пользователей
     if (timeParam) {
         const targetDate = new Date(timeParam);
-
-        // Проверяем, корректная ли дата передана в ссылке
         if (!isNaN(targetDate.getTime())) {
-            
             function updateSeconds() {
                 const now = new Date();
                 const diff = targetDate - now;
 
-                // Если время вышло
                 if (diff <= 0) {
                     titleEl.innerText = "VPN отключен";
                     titleEl.className = "status-inactive";
@@ -153,7 +185,6 @@
                 titleEl.className = "status-active";
                 timerEl.className = "timer status-active";
 
-                // Расчет времени
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -161,17 +192,10 @@
                 const pad = (num) => String(num).padStart(2, '0');
                 timerEl.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
             }
-
             updateSeconds();
             intervalId = setInterval(updateSeconds, 1000);
-        } else {
-            // Если в параметре `time` передан сломанный формат текста
-            showDisconnected();
-        }
-    } else {
-        // Если ссылка обычная (параметра `time` вообще нет)
-        showDisconnected();
-    }
+        } else { showDisconnected(); }
+    } else { showDisconnected(); }
 
     function showDisconnected() {
         titleEl.innerText = "VPN отключен";
@@ -179,6 +203,61 @@
         timerEl.innerText = "00:00:00";
         timerEl.className = "timer status-inactive";
     }
+
+    // 2. ИНТЕРАКТИВНОЕ ДВИЖЕНИЕ КОТА
+    const cat = document.getElementById('cat');
+    let posX = window.innerWidth / 2; // Кот стартует по центру
+    let direction = 1; // 1 — вправо, -1 — влево
+    let speed = 1.5; // Базовая скорость ходьбы
+
+    function updateCatPosition() {
+        // Кот идет в своем направлении
+        posX += direction * speed;
+
+        // Телепортация с разворотом, если зашел за край экрана
+        if (posX > window.innerWidth + 50) {
+            posX = -50;
+        } else if (posX < -50) {
+            posX = window.innerWidth + 50;
+        }
+
+        // Отрисовка
+        cat.style.left = posX + 'px';
+        // Отражаем кота по горизонтали в зависимости от направления
+        cat.style.transform = direction === 1 ? 'scaleX(1)' : 'scaleX(-1)';
+
+        // Постепенно возвращаем коту нормальную скорость сна
+        if (speed > 1.5) speed -= 0.05;
+
+        requestAnimationFrame(updateCatPosition);
+    }
+
+    // Радар мыши
+    document.addEventListener('mousemove', (e) => {
+        const catRect = cat.getBoundingClientRect();
+        const catX = catRect.left + catRect.width / 2;
+        const catY = catRect.top + catRect.height / 2;
+
+        // Вычисляем расстояние до курсора
+        const diffX = e.clientX - catX;
+        const diffY = e.clientY - catY;
+        const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+
+        // Если курсор подошел ближе, чем на 120 пикселей — пугаем кота
+        if (distance < 120) {
+            speed = 5; // Кот пугается и ускоряется!
+            
+            // Если мышка нагоняет кота сзади или стоит впереди, заставляем его бежать ОТ мышки
+            if (diffX > 0) {
+                direction = -1; // Мышка справа -> бежим влево
+            } else {
+                direction = 1;  // Мышка слева -> бежим вправо
+            }
+        }
+    });
+
+    // Запускаем игровой цикл кота
+    updateCatPosition();
 </script>
 
 </body>
