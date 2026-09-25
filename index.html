@@ -79,6 +79,7 @@
             position: relative;
             background-color: #2ed573;
             border-top: 6px solid #26af5f;
+            image-rendering: pixelated;
         }
         
         .pixel-footer::before {
@@ -92,27 +93,20 @@
             opacity: 0.15;
         }
 
-        /* КОТ, НАРИСОВАННЫЙ С ПОМОЩЬЮ CSS SHADOWS */
+        /* Кот — встроенная CSS-графика (Base64) */
         .pixel-cat {
-            width: 4px;
-            height: 4px;
+            width: 48px;
+            height: 36px;
             position: absolute;
-            bottom: 60px;
+            bottom: 35px;
             left: 50px;
+            /* Вшитый 8-битный анимированный черный кот */
+            background-image: url("data:image/gif;base64,R0lGODlhMAAkAPMAAP///wAAAMzMzH9/f4CAgEJCQkDAwAD/AMDAwICAgP///////////////wAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBwAPACwAAAAAMAAkAEH/cMlJq70467372YgEcYmdaKpqXEqurrtVb+zS7f7Ube/b7v6IAnHJSau9OOu9+9mIBHGJnWiqalxKrq67VW/s0u3+1G3v2+7+iAJxyUmrvTjrvfvZiARxiZ1oqmpcSq6uuxVv7NLt/tRt79vu/ogCcclJq70467372YgEcYmdaKpqXEqurrtVb+zS7f7Ube/b7v4IADs=");
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
             pointer-events: none;
             will-change: left;
-            background: transparent;
-            /* Попиксельная карта кота: уши, голова, тело, лапы и хвост */
-            box-shadow: 
-                16px 0px #1f2937, 28px 0px #1f2937,
-                16px 4px #1f2937, 20px 4px #1f2937, 24px 4px #1f2937, 28px 4px #1f2937,
-                12px 8px #1f2937, 16px 8px #1f2937, 20px 8px #ffffff, 24px 8px #1f2937, 28px 8px #ffffff, 32px 8px #1f2937,
-                12px 12px #1f2937, 16px 12px #1f2937, 20px 12px #1f2937, 24px 12px #1f2937, 28px 12px #1f2937, 32px 12px #1f2937,
-                16px 16px #1f2937, 20px 16px #1f2937, 24px 16px #1f2937, 28px 16px #1f2937,
-                0px 20px #1f2937, 12px 20px #1f2937, 16px 20px #1f2937, 20px 20px #1f2937, 24px 20px #1f2937, 28px 20px #1f2937,
-                0px 24px #1f2937, 4px 24px #1f2937, 8px 24px #1f2937, 12px 24px #1f2937, 16px 24px #1f2937, 20px 24px #1f2937, 24px 24px #1f2937, 28px 24px #1f2937,
-                4px 28px #1f2937, 8px 28px #1f2937, 12px 28px #1f2937, 16px 28px #1f2937, 20px 28px #1f2937, 24px 28px #1f2937,
-                12px 32px #1f2937, 24px 32px #1f2937;
         }
     </style>
 </head>
@@ -142,7 +136,7 @@
 </div>
 
 <script>
-    // 1. КОД ТАЙМЕРА И ССЫЛОК
+    // 1. КОД ТАЙМЕРА (БЕЗ ИЗМЕНЕНИЙ)
     const urlParams = new URLSearchParams(window.location.search);
     const timeParam = urlParams.get('time');
     const isAdmin = urlParams.get('admin') === 'true';
@@ -212,51 +206,57 @@
 
     // 2. ИНТЕРАКТИВНОЕ ДВИЖЕНИЕ КОТА
     const cat = document.getElementById('cat');
-    let posX = window.innerWidth / 2;
-    let direction = 1; 
-    let speed = 1.5; 
+    let posX = window.innerWidth / 2; // Кот стартует по центру
+    let direction = 1; // 1 — вправо, -1 — влево
+    let speed = 1.5; // Базовая скорость ходьбы
 
     function updateCatPosition() {
+        // Кот идет в своем направлении
         posX += direction * speed;
 
+        // Телепортация с разворотом, если зашел за край экрана
         if (posX > window.innerWidth + 50) {
             posX = -50;
         } else if (posX < -50) {
             posX = window.innerWidth + 50;
         }
 
+        // Отрисовка
         cat.style.left = posX + 'px';
-        
-        // Меняем масштаб для разворота кота. Дополнительно смещаем по оси X, чтобы центр при развороте не дергался
-        cat.style.transform = direction === 1 ? 'scaleX(1)' : 'scaleX(-1) translateX(-36px)';
+        // Отражаем кота по горизонтали в зависимости от направления
+        cat.style.transform = direction === 1 ? 'scaleX(1)' : 'scaleX(-1)';
 
+        // Постепенно возвращаем коту нормальную скорость сна
         if (speed > 1.5) speed -= 0.05;
 
         requestAnimationFrame(updateCatPosition);
     }
 
-    // Отслеживание мыши
+    // Радар мыши
     document.addEventListener('mousemove', (e) => {
         const catRect = cat.getBoundingClientRect();
-        const catX = catRect.left + 18; // Центр кота по X
-        const catY = catRect.top + 18;  // Центр кота по Y
+        const catX = catRect.left + catRect.width / 2;
+        const catY = catRect.top + catRect.height / 2;
 
+        // Вычисляем расстояние до курсора
         const diffX = e.clientX - catX;
         const diffY = e.clientY - catY;
         const distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        // Если мышка приблизилась ближе, чем на 150 пикселей
-        if (distance < 150) {
-            speed = 5; // Ускоряемся!
+        // Если курсор подошел ближе, чем на 120 пикселей — пугаем кота
+        if (distance < 120) {
+            speed = 5; // Кот пугается и ускоряется!
             
+            // Если мышка нагоняет кота сзади или стоит впереди, заставляем его бежать ОТ мышки
             if (diffX > 0) {
-                direction = -1; // Курсор справа -> кот бежит влево
+                direction = -1; // Мышка справа -> бежим влево
             } else {
-                direction = 1;  // Курсор слева -> кот бежит вправо
+                direction = 1;  // Мышка слева -> бежим вправо
             }
         }
     });
 
+    // Запускаем игровой цикл кота
     updateCatPosition();
 </script>
 
